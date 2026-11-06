@@ -45,3 +45,13 @@ test('a cautious bot collects prizes and escapes legally before the deadline', (
   for(let i=0;i<10000&&m.status==='racing';i++){steerBot(arena,m,p,brain,.05);stepMatch(arena,m,.05);assert.ok(canStand(arena,p.x,p.y));}
   assert.notEqual(p.finishedAt,null);assert.ok(p.score>0);assert.ok(p.finishedAt<480);
 });
+test('a full four-player bot race terminates with independent collections', () => {
+  const ps=Array.from({length:4},(_,i)=>createPlayer(arena,'b'+i,'Bot '+i,i,i===3?'racer':'collector'));
+  const m=createMatch(arena,ps),brains=ps.map(()=>createBot());
+  for(let i=0;i<10000&&m.status==='racing';i++){
+    for(let j=0;j<ps.length;j++)steerBot(arena,m,ps[j],brains[j],.05);
+    stepMatch(arena,m,.05);
+  }
+  assert.equal(m.status,'finished');
+  for(const p of ps){assert.notEqual(p.finishedAt,null,p.name);assert.equal(new Set(p.collected).size,p.collected.length);assert.ok(p.score>0);}
+});
