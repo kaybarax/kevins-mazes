@@ -178,6 +178,12 @@ function receiveRoom(state, events, id) {
   if (!online) return;
   myId = id;
   roomState = state;
+  const rematchButton = document.querySelector("#rematch");
+  if (rematchButton) {
+    rematchButton.disabled = state.hostId !== myId;
+    rematchButton.textContent =
+      state.hostId === myId ? "Run it back ↗" : "Waiting for host";
+  }
   if (!state.match || !state.match.players.some((p) => p.id === id)) {
     buildLobby();
     return;
@@ -257,6 +263,9 @@ function startLocal(name, bots) {
   buildRace();
 }
 function buildRace() {
+  keys.clear();
+  stick = { x: 0, y: 0 };
+  online?.input(0, 0);
   const me = match.players.find((p) => p.id === myId),
     watch = match.players.find((p) => p.id === watchId) || me;
   const quad = layout === "arena" && innerWidth > 700;
