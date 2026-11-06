@@ -22,7 +22,7 @@ npm run build
 ## Delivery milestones
 
 - [x] Shared collision map, movement, scoring, and verified arena data
-- [ ] Solo game, touch/keyboard controls, feedback, and bots
+- [x] Solo game, touch/keyboard controls, feedback, and bots
 - [ ] Authoritative online rooms, reconnects, synchronized starts
 - [ ] Desktop arena/focus layouts, mobile spectating, results/rematch
 - [ ] Browser QA, deployment, and live multiplayer verification

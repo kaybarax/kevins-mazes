@@ -63,7 +63,7 @@ export function steerBot(arena, match, p, brain, dt) {
       // Bound planning work: evaluate nearby candidates and the central prize.
       const nearby = arena.items.filter(i => !p.collected.includes(i.id)).sort((a, b) => Math.hypot(a.x-p.x,a.y-p.y) - Math.hypot(b.x-p.x,b.y-p.y)).slice(0, 5);
       candidates = nearby.map(i => ({ id: i.id, value: i.value, path: findPath(arena, [p.x, p.y], pointAt(arena, i.node)) })).filter(i => i.path.length);
-      candidates.sort((a, b) => b.value / (pathLength(b.path) + 100) - a.value / (pathLength(a.path) + 100));
+      candidates.sort((a, b) => (b.value + (p.slot === 2 && Number(b.id) % 3 === 0 ? 8 : 0)) / (pathLength(b.path) + 100) - (a.value + (p.slot === 2 && Number(a.id) % 3 === 0 ? 8 : 0)) / (pathLength(a.path) + 100));
     }
     const chosen = candidates[0] || escape;
     if (!chosen) { setInput(p, { x: 0, y: 0 }); return; }

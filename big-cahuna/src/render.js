@@ -1,0 +1,30 @@
+import { nodeAt } from './engine.js';
+export async function loadArt(arena) {
+  const load = src => new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Could not load '+src));img.src=src;});
+  const walls=await load('/arena.svg'),items=await Promise.all(arena.items.map(i=>load(`/item-${i.id}.svg`)));
+  return {walls,items};
+}
+export function drawView(canvas, arena, art, player, {overview=true, particles=[], trail=true, time=0}={}) {
+  const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;
+  const dpr=Math.min(devicePixelRatio||1,2),w=Math.round(r.width*dpr),h=Math.round(r.height*dpr);
+  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+  const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#fff';ctx.fillRect(0,0,r.width,r.height);
+  let scale,cx,cy;
+  if(overview){scale=Math.min(r.width/1910,r.height/1240);cx=1000;cy=650;}
+  else {scale=Math.max(r.width/750,r.height/530);cx=player?.x??1000;cy=player?.y??650;const hw=r.width/scale/2,hh=r.height/scale/2;cx=Math.max(100+hw,Math.min(1880-hw,cx));cy=Math.max(65+hh,Math.min(1250-hh,cy));}
+  const tx=r.width/2-cx*scale,ty=r.height/2-cy*scale;
+  ctx.translate(tx,ty);ctx.scale(scale,scale);ctx.drawImage(art.walls,0,0);
+  if(trail&&player?.trail?.length>1){ctx.beginPath();ctx.moveTo(...player.trail[0]);for(const p of player.trail)ctx.lineTo(...p);ctx.strokeStyle=player.color+'60';ctx.lineWidth=5;ctx.lineCap='round';ctx.stroke();}
+  arena.items.forEach((item,i)=>{if(player?.collected.includes(item.id))return;const size=item.kind==='The Big Cahuna'?190:110;ctx.drawImage(art.items[i],item.x-size/2,item.y-size/2,size,size);});
+  for(const e of arena.exits){ctx.fillStyle='#eef5dd';ctx.beginPath();ctx.arc(e.x,e.y,34,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#315d43';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(e.x-12,e.y+20);ctx.lineTo(e.x-12,e.y-20);ctx.stroke();for(let y=0;y<3;y++)for(let x=0;x<4;x++){ctx.fillStyle=(x+y)%2?'#fff':'#315d43';ctx.fillRect(e.x-10+x*7,e.y-20+y*7,7,7);}}
+  if(player){ctx.fillStyle=player.color+'20';ctx.beginPath();ctx.arc(player.x,player.y,13+Math.sin(time*3)*2,0,Math.PI*2);ctx.fill();ctx.fillStyle=player.color;ctx.beginPath();ctx.arc(player.x,player.y,6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();}
+  for(const p of particles){const age=time-p.at;if(age>1.2)continue;ctx.globalAlpha=1-age/1.2;ctx.fillStyle='#174b47';ctx.font='bold 25px sans-serif';ctx.textAlign='center';ctx.fillText('+'+p.value,p.x,p.y-20-age*35);ctx.globalAlpha=1;}
+  return {scale,tx,ty};
+}
+export function exitDistances(arena) {
+  const d=new Int32Array(arena.walk.length);d.fill(-1);const queue=new Int32Array(d.length);let head=0,tail=0;
+  for(const e of arena.exits){const n=nodeAt(arena,e.x,e.y);if(arena.walk[n]){d[n]=0;queue[tail++]=n;}}
+  while(head<tail){const n=queue[head++],x=n%arena.cols;for(const next of [x?n-1:-1,x<arena.cols-1?n+1:-1,n-arena.cols,n+arena.cols])if(next>=0&&next<d.length&&arena.walk[next]&&d[next]===-1){d[next]=d[n]+1;queue[tail++]=next;}}
+  return d;
+}
+export function progress(arena,distances,p,startSide=0){if(p.finishedAt!==null)return 100;const start=distances[nodeAt(arena,...arena.starts[startSide])],now=distances[nodeAt(arena,p.x,p.y)];return now<0?0:Math.max(0,Math.min(99,Math.round(100*(1-now/start))));}
