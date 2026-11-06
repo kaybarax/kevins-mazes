@@ -1,0 +1,13 @@
+{
+  "name": "the-big-cahuna-run",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "test": "node --test tests/*.test.js",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "devDependencies": {"vite": "^7.0.0"}
+}
