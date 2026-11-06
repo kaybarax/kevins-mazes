@@ -22,7 +22,7 @@ const esc = (s) =>
       ],
   );
 const fmt = (t) =>
-  `${Math.floor(Math.max(0, t) / 60)}:${String(Math.ceil(Math.max(0, t) % 60)).padStart(2, "0")}`;
+  `${Math.floor(Math.ceil(Math.max(0, t)) / 60)}:${String(Math.ceil(Math.max(0, t)) % 60).padStart(2, "0")}`;
 let online = null,
   roomState = null,
   networkStatus = "",
@@ -126,6 +126,9 @@ function showHome() {
 }
 function joinOnline(code) {
   const name = document.querySelector("#name").value.trim() || "Explorer";
+  const roomUrl = new URL(location.href);
+  roomUrl.searchParams.set("room", code);
+  history.replaceState(null, "", roomUrl);
   savePrefs(name, document.querySelector("#bots").value);
   online = new RoomClient(code, name, {
     status(message) {
@@ -175,6 +178,12 @@ function receiveRoom(state, events, id) {
   if (!online) return;
   myId = id;
   roomState = state;
+  const rematchButton = document.querySelector("#rematch");
+  if (rematchButton) {
+    rematchButton.disabled = state.hostId !== myId;
+    rematchButton.textContent =
+      state.hostId === myId ? "Run it back ↗" : "Waiting for host";
+  }
   if (!state.match || !state.match.players.some((p) => p.id === id)) {
     buildLobby();
     return;
@@ -254,10 +263,13 @@ function startLocal(name, bots) {
   buildRace();
 }
 function buildRace() {
+  keys.clear();
+  stick = { x: 0, y: 0 };
+  online?.input(0, 0);
   const me = match.players.find((p) => p.id === myId),
     watch = match.players.find((p) => p.id === watchId) || me;
   const quad = layout === "arena" && innerWidth > 700;
-  app.innerHTML = `<div class="play-shell"><header class="racebar"><div class="race-heading">${brand}<div><small>TIME TO ESCAPE</small><span class="timer" id="timer">${fmt(match.duration - match.elapsed)}</span></div></div><div class="race-actions">${online ? `<small id="connection" role="status">${esc(networkStatus)}</small>` : ""}<button class="ghost arena-toggle" id="layout">${quad ? "Focus view" : "Arena view"}</button><button class="ghost" id="sound">Sound ${sound ? "on" : "off"}</button><button class="ghost" id="leave">Leave</button></div></header><main class="race-layout ${quad ? "quadrants" : ""}">${quad ? match.players.map((p) => viewMarkup(p, p.id === watchId)).join("") : viewMarkup(watch, true) + `<aside class="sidebar" aria-label="Competitors">${match.players.map((p) => `<button class="competitor ${p.id === watchId ? "selected" : ""}" data-watch="${p.id}" aria-label="${p.id === myId ? "Return to your race" : "Watch " + esc(p.name)}"><div class="row"><span class="name"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}${p.id === myId ? " · you" : ""}</span><span class="score" data-score="${p.id}">0</span></div><div class="row"><small>${p.bot ? (p.bot === "racer" ? "Cautious racer" : "Collector bot") : "Your expedition"}</small><small data-progress="${p.id}">0% to exit</small></div><div class="bar"><i data-bar="${p.id}" style="width:0%"></i></div><canvas data-mini="${p.id}" aria-hidden="true"></canvas></button>`).join("")}</aside>`}</main><div class="race-help"><span><span class="keys"><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></span> Move · Drag toward a direction · <b>Space</b> map</span><span id="race-hint">Your prizes are yours alone. Watching stops your character, not the clock.</span></div></div>`;
+  app.innerHTML = `<div class="play-shell"><header class="racebar"><div class="race-heading">${brand}<div><small>TIME TO ESCAPE</small><span class="timer" id="timer">${fmt(match.duration - match.elapsed)}</span></div></div><div class="race-actions">${online ? `<small id="connection" role="status">${esc(networkStatus)}</small>` : ""}<button class="ghost arena-toggle" id="layout">${quad ? "Focus view" : "Arena view"}</button><button class="ghost" id="sound">Sound ${sound ? "on" : "off"}</button><button class="ghost" id="leave">Leave</button></div></header><main class="race-layout ${quad ? "quadrants" : ""}">${quad ? match.players.map((p) => viewMarkup(p, p.id === watchId)).join("") : viewMarkup(watch, true) + `<aside class="sidebar" aria-label="Competitors">${match.players.map((p) => `<button class="competitor ${p.id === watchId ? "selected" : ""}" data-watch="${p.id}" aria-label="${p.id === myId ? "Return to your race" : "Watch " + esc(p.name)}"><div class="row"><span class="name"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}${p.id === myId ? " · you" : ""}</span><span class="score" data-score="${p.id}">0</span></div><div class="row"><small>${p.bot ? (p.bot === "racer" ? "Cautious racer" : "Collector bot") : p.id === myId ? "You" : "Live rival"}</small><small data-progress="${p.id}">0% to exit</small></div><div class="bar"><i data-bar="${p.id}" style="width:0%"></i></div><canvas data-mini="${p.id}" aria-hidden="true"></canvas></button>`).join("")}</aside>`}</main><div class="race-help"><span><span class="keys"><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></span> Move · Drag toward a direction · <b>Space</b> map</span><span id="race-hint">Your prizes are yours alone. Watching stops your character, not the clock.</span></div></div>`;
   document.querySelector("#layout").onclick = () => {
     layout = quad ? "focus" : "arena";
     buildRace();
@@ -288,7 +300,7 @@ function buildRace() {
   updateHud();
 }
 function viewMarkup(p, active) {
-  return `<section class="view"><div class="view-label"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)} ${p.id === myId ? "· YOU" : p.bot ? "· BOT" : "· LIVE"} <span data-score="${p.id}">${p.score}</span> pts</div><canvas data-player="${p.id}" aria-label="${esc(p.name)}’s live maze" tabindex="0"></canvas><div class="view-tools">${p.id === myId ? `<button class="ghost" data-map>${overview ? "Follow me" : "Full map"}</button>` : `<button class="ghost" data-watch="${watchId === p.id ? myId : p.id}">${watchId === p.id ? "Return to play" : "Watch"}</button>`}</div>${active && p.id === myId ? '<div class="stick" aria-label="Touch movement joystick"><i></i></div>' : ""}${active && p.id !== myId ? '<div class="watch-banner">Watching live · Your character is standing still</div>' : ""}${countdown > 0 && active ? '<div class="countdown"><b id="count">3</b><p>Find the prizes. Find your way out.</p></div>' : ""}</section>`;
+  return `<section class="view"><div class="view-label"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)} ${p.id === myId ? "· YOU" : p.bot ? "· BOT" : "· LIVE"} <span data-score="${p.id}">${p.score}</span> pts</div><canvas data-player="${p.id}" aria-label="${esc(p.name)}’s live maze" tabindex="0"></canvas><div class="view-tools">${p.id === myId ? `<button class="ghost" data-map>${overview ? "Follow me" : "Full map"}</button>` : `${active ? `<button class="ghost" data-map>${overview ? "Follow" : "Map"}</button>` : ""}<button class="ghost" data-watch="${watchId === p.id ? myId : p.id}">${watchId === p.id ? "Return to play" : "Watch"}</button>`}</div>${active && p.id === myId ? '<div class="stick" aria-label="Touch movement joystick"><i></i></div>' : ""}${active && p.id !== myId ? '<div class="watch-banner">Watching live · Your character is standing still</div>' : ""}${countdown > 0 && active ? '<div class="countdown"><b id="count">3</b><p>Find the prizes. Find your way out.</p></div>' : ""}</section>`;
 }
 function watchPlayer(id) {
   watchId = id;
@@ -393,8 +405,11 @@ function updateHud() {
       .querySelectorAll(`[data-progress="${p.id}"]`)
       .forEach(
         (el) =>
-          (el.textContent =
-            p.finishedAt !== null ? "Escaped!" : `${percent}% to exit`),
+          (el.textContent = !p.connected
+            ? "Offline"
+            : p.finishedAt !== null
+              ? "Escaped!"
+              : `${percent}% to exit`),
       );
     document
       .querySelectorAll(`[data-bar="${p.id}"]`)
@@ -511,7 +526,7 @@ function tick(now) {
     for (const c of document.querySelectorAll("canvas[data-player]")) {
       const p = match.players.find((p) => p.id === c.dataset.player);
       c.viewTransform = drawView(c, arena, art, p, {
-        overview: layout === "arena" || p.id !== myId || overview,
+        overview: (layout === "arena" && innerWidth > 700) || overview,
         particles: particles.filter((e) => e.playerId === p.id),
         time: now / 1000,
       });
@@ -556,7 +571,14 @@ window.addEventListener("blur", () => {
   stick = { x: 0, y: 0 };
   online?.input(0, 0);
 });
+let wasMobile = innerWidth <= 700;
 window.addEventListener("resize", () => {
+  if (screen === "race" && wasMobile !== innerWidth <= 700) {
+    wasMobile = innerWidth <= 700;
+    keys.clear();
+    stick = { x: 0, y: 0 };
+    buildRace();
+  }
   if (screen === "home" && art)
     drawView(document.querySelector("#preview"), arena, art, null);
 });
