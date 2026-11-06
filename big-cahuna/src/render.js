@@ -62,7 +62,12 @@ export function drawView(
     ctx.stroke();
   }
   arena.items.forEach((item, i) => {
-    if (player?.collected.includes(item.id)) return;
+    const taken = player?.collected.includes(item.id);
+    ctx.save();
+    if (taken) {
+      ctx.globalAlpha = 0.48;
+      ctx.filter = "grayscale(1)";
+    }
     const size = item.kind === "The Big Cahuna" ? 190 : 110;
     ctx.drawImage(
       art.items[i],
@@ -71,6 +76,24 @@ export function drawView(
       size,
       size,
     );
+    ctx.restore();
+    if (taken) {
+      const x = item.x + size * 0.26,
+        y = item.y + size * 0.26;
+      ctx.fillStyle = "#e3ebe5";
+      ctx.strokeStyle = "#47715a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - 6, y);
+      ctx.lineTo(x - 1, y + 5);
+      ctx.lineTo(x + 7, y - 5);
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
   });
   for (const e of arena.exits) {
     ctx.fillStyle = "#eef5dd";

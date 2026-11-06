@@ -54,6 +54,11 @@ const saved = (() => {
     return {};
   }
 })();
+let pace = [0.25, 0.5, 0.75, 1].includes(saved.pace) ? saved.pace : 0.75;
+function pacedInput(x, y) {
+  const length = Math.max(1, Math.hypot(x, y));
+  return { x: (x / length) * pace, y: (y / length) * pace };
+}
 const brand =
   '<div class="brand"><span class="brand-mark">✳</span><span>KEVIN’S MAZES</span></div>';
 const prizes = [
@@ -78,7 +83,7 @@ function savePrefs(name, bots) {
   try {
     localStorage.setItem(
       "cahuna-preferences",
-      JSON.stringify({ name, bots, sound }),
+      JSON.stringify({ name, bots, sound, pace }),
     );
   } catch {}
 }
@@ -269,10 +274,15 @@ function buildRace() {
   const me = match.players.find((p) => p.id === myId),
     watch = match.players.find((p) => p.id === watchId) || me;
   const quad = layout === "arena" && innerWidth > 700;
-  app.innerHTML = `<div class="play-shell"><header class="racebar"><div class="race-heading">${brand}<div><small>TIME TO ESCAPE</small><span class="timer" id="timer">${fmt(match.duration - match.elapsed)}</span></div></div><div class="race-actions">${online ? `<small id="connection" role="status">${esc(networkStatus)}</small>` : ""}<button class="ghost arena-toggle" id="layout">${quad ? "Focus view" : "Arena view"}</button><button class="ghost" id="sound">Sound ${sound ? "on" : "off"}</button><button class="ghost" id="leave">Leave</button></div></header><main class="race-layout ${quad ? "quadrants" : ""}">${quad ? match.players.map((p) => viewMarkup(p, p.id === watchId)).join("") : viewMarkup(watch, true) + `<aside class="sidebar" aria-label="Competitors">${match.players.map((p) => `<button class="competitor ${p.id === watchId ? "selected" : ""}" data-watch="${p.id}" aria-label="${p.id === myId ? "Return to your race" : "Watch " + esc(p.name)}"><div class="row"><span class="name"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}${p.id === myId ? " · you" : ""}</span><span class="score" data-score="${p.id}">0</span></div><div class="row"><small>${p.bot ? (p.bot === "racer" ? "Cautious racer" : "Collector bot") : p.id === myId ? "You" : "Live rival"}</small><small data-progress="${p.id}">0% to exit</small></div><div class="bar"><i data-bar="${p.id}" style="width:0%"></i></div><canvas data-mini="${p.id}" aria-hidden="true"></canvas></button>`).join("")}</aside>`}</main><div class="race-help"><span><span class="keys"><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></span> Move · Drag toward a direction · <b>Space</b> map</span><span id="race-hint">Your prizes are yours alone. Watching stops your character, not the clock.</span></div></div>`;
+  app.innerHTML = `<div class="play-shell"><header class="racebar"><div class="race-heading">${brand}<div><small>TIME TO ESCAPE</small><span class="timer" id="timer">${fmt(match.duration - match.elapsed)}</span></div></div><div class="race-actions">${online ? `<small id="connection" role="status">${esc(networkStatus)}</small>` : ""}<button class="ghost arena-toggle" id="layout">${quad ? "Focus view" : "Arena view"}</button><label class="pace-control">Speed<select id="pace" aria-label="Movement speed"><option value="0.25">Gentle</option><option value="0.5">Slow</option><option value="0.75">Steady</option><option value="1">Brisk</option></select></label><button class="ghost" id="sound">Sound ${sound ? "on" : "off"}</button><button class="ghost" id="leave">Leave</button></div></header><main class="race-layout ${quad ? "quadrants" : ""}">${quad ? match.players.map((p) => viewMarkup(p, p.id === watchId)).join("") : viewMarkup(watch, true) + `<aside class="sidebar" aria-label="Competitors">${match.players.map((p) => `<button class="competitor ${p.id === watchId ? "selected" : ""}" data-watch="${p.id}" aria-label="${p.id === myId ? "Return to your race" : "Watch " + esc(p.name)}"><div class="row"><span class="name"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}${p.id === myId ? " · you" : ""}</span><span class="score" data-score="${p.id}">0</span></div><div class="row"><small>${p.bot ? (p.bot === "racer" ? "Cautious racer" : "Collector bot") : p.id === myId ? "You" : "Live rival"}</small><small data-progress="${p.id}">0% to exit</small></div><div class="bar"><i data-bar="${p.id}" style="width:0%"></i></div><canvas data-mini="${p.id}" aria-hidden="true"></canvas></button>`).join("")}</aside>`}</main><div class="race-help"><span><span class="keys"><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></span> Move · Drag toward a direction · <b>Space</b> map</span><span id="race-hint">Your prizes are yours alone. Watching stops your character, not the clock.</span></div></div>`;
   document.querySelector("#layout").onclick = () => {
     layout = quad ? "focus" : "arena";
     buildRace();
+  };
+  document.querySelector("#pace").value = String(pace);
+  document.querySelector("#pace").onchange = (e) => {
+    pace = Number(e.target.value);
+    savePrefs(me.name, saved.bots ?? "3");
   };
   document.querySelector("#sound").onclick = () => {
     sound = !sound;
@@ -478,9 +488,10 @@ function tick(now) {
         const y =
           (keys.has("ArrowDown") || keys.has("s") ? 1 : 0) -
           (keys.has("ArrowUp") || keys.has("w") ? 1 : 0);
+        const input = pacedInput(x || y ? x : stick.x, x || y ? y : stick.y);
         online.input(
-          watchId === myId ? (x || y ? x : stick.x) : 0,
-          watchId === myId ? (x || y ? y : stick.y) : 0,
+          watchId === myId ? input.x : 0,
+          watchId === myId ? input.y : 0,
         );
         sentAt = now;
       }
@@ -494,7 +505,7 @@ function tick(now) {
           y =
             (keys.has("ArrowDown") || keys.has("s") ? 1 : 0) -
             (keys.has("ArrowUp") || keys.has("w") ? 1 : 0);
-        setInput(me, x || y ? { x, y } : stick);
+        setInput(me, pacedInput(x || y ? x : stick.x, x || y ? y : stick.y));
         for (const p of match.players)
           if (p.bot) steerBot(arena, match, p, brains[p.id], 0.025);
         const events = stepMatch(arena, match, 0.025);
