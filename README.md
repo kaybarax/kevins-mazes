@@ -2,6 +2,12 @@
 
 A collection of 25 hand-drawn mazes by Kevin, redrawn as clean SVGs and interactive 3D web pages.
 
+## Play The Big Cahuna Run
+
+[Open the game](https://the-big-cahuna-run.the-big-cahuna-run.workers.dev) — race through Maze 24, collect prizes, and escape before time runs out. Play solo, against bots, or with up to four players in private invite rooms. Desktop quadrant views and mobile live spectating let you follow your rivals.
+
+Source, development commands, and game rules are in [big-cahuna/README.md](big-cahuna/README.md).
+
 ## Files
 
 - **cleaned mazes/** — scalable SVG versions for viewing and printing.

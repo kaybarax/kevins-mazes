@@ -2,6 +2,8 @@
 
 A competitive collecting race through Kevin’s Maze 24, for up to four humans and bots.
 
+Published URL: https://the-big-cahuna-run.the-big-cahuna-run.workers.dev
+
 ## Development
 
 ```sh
@@ -27,7 +29,7 @@ npm run build
 - [x] Solo game, touch/keyboard controls, feedback, and bots
 - [x] Authoritative online rooms, reconnects, synchronized starts
 - [x] Desktop arena/focus layouts, mobile spectating, results/rematch
-- [ ] Browser QA, deployment, and live multiplayer verification
+- [x] Browser QA, deployment, and live multiplayer verification
 
 Artwork and game material: Kevin (kaybarax). See the repository LICENSE.
 
@@ -46,3 +48,9 @@ If the connection drops, the game retries automatically. After refreshing the pa
 For a complete real-time protocol check, run `node scripts/check-full-race.mjs` against the local server or set `CAHUNA_URL` for a deployment. It drives one player through legal controls, competes against a server bot, verifies both finish with prizes, and verifies the rematch resets.
 
 Cloudflare free-tier usage limits apply. This initial release has private invite rooms and no accounts, public matchmaking, or persistent leaderboard.
+
+## Release verification
+
+Deployed from commit `04c79c5` on 7 November 2026 (Europe/Berlin), Cloudflare version `1cd8b854-ff23-4e55-916a-23ee8e9b3e1e`. Ten automated tests and GitHub checks passed. Local browser checks covered two-player joining, synchronized starts, quadrants, spectating, and mobile stick controls at 390 × 844. The production browser recovered an active seat after refresh.
+
+Both public-protocol checks passed against the deployed HTTPS URL: two humans plus two bots, host handover, secret validation, cross-origin rejection, and a complete race plus rematch. In the complete production test, the controlled player finished with 38 points in 25.4 seconds and the server bot with 75 points in 32.7 seconds.
