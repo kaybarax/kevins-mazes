@@ -1,6 +1,6 @@
 # Kevin’s Mazes
 
-A collection of 25 hand-drawn mazes by Kevin Barasa, redrawn as clean SVGs and interactive 3D web pages.
+A collection of 25 hand-drawn mazes by Kevin, redrawn as clean SVGs and interactive 3D web pages.
 
 ## Files
 
