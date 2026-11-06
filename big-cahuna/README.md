@@ -39,6 +39,10 @@ Online integration check (with the local server running): `node scripts/check-on
 
 Deploy with `npm run deploy` after `npx wrangler login`. The Worker serves the built assets and SQLite-backed Durable Object rooms together. Rooms expire after 24 hours; invite codes are not accounts. Reconnect seats are stored per browser tab.
 
+## Movement and collectibles
+
+The in-race Speed control applies to keyboard, mouse, and touch movement: Gentle (15), Slow (30), Steady (45, default), or Brisk (60 maze units per second). Your selection is saved in this browser. Online movement has the same server-enforced maximum, and bots also use the reduced maximum. Collected icons remain visible in muted grayscale with a checkmark; they still score only once per player.
+
 ## Playing online
 
 Choose **Create online room**, copy the invite link, and share it with up to three friends. The host can fill empty seats with bots or start with just the connected players. Tap a competitor to spectate; your movement pauses, but the race clock does not. On larger screens, Arena view shows all four runs. Progress indicates proximity to the nearest exit along a legal route, so it can decrease while collecting prizes.

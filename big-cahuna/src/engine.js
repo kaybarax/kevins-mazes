@@ -1,5 +1,5 @@
 /** Shared deterministic rules. Online rooms run these on the server. */
-export const SPEED = 105;
+export const SPEED = 60;
 export const ROUND_SECONDS = 480;
 export const COLORS = ["#167d8d", "#e17b42", "#8a67c7", "#c49d24"];
 export function decodeArena(data) {

@@ -143,3 +143,28 @@ test("a full four-player bot race terminates with independent collections", () =
     assert.ok(p.score > 0);
   }
 });
+
+test("fractional controls retain their pace and oversized controls cannot exceed the slower cap", () => {
+  const open = {
+    step: 1,
+    cols: 300,
+    rows: 300,
+    walk: new Uint8Array(90000).fill(1),
+    starts: [[100, 100]],
+    items: [],
+    exits: [],
+  };
+  for (const [input, expected] of [
+    [0.25, 15],
+    [0.5, 30],
+    [0.75, 45],
+    [1, 60],
+    [20, 60],
+  ]) {
+    const p = createPlayer(open, "pace", "Pace", 0),
+      match = createMatch(open, [p]);
+    setInput(p, { x: input, y: 0 });
+    for (let i = 0; i < 10; i++) stepMatch(open, match, 0.1);
+    assert.ok(Math.abs(p.x - 100 - expected) < 1e-6, `pace ${input}`);
+  }
+});
