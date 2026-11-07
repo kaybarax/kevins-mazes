@@ -9,7 +9,7 @@ Preview: `python3 -m http.server 5175 --directory public`
 Deploy from this directory using the existing Cloudflare tooling:
 
 ```sh
-../maze-chase/node_modules/.bin/wrangler deploy --config wrangler.jsonc
+node ../scripts/deploy.mjs game-hub
 ```
 
 Artwork is derived from Kevin’s existing SVG mazes. Original files are unchanged. Attribution and license follow the root repository.

@@ -42,3 +42,19 @@ You may share and adapt the material, including commercially, provided you give 
 Suggested credit:
 
 > Kevin’s Mazes by Kevin (kaybarax) — https://github.com/kaybarax/kevins-mazes — CC BY 4.0: https://creativecommons.org/licenses/by/4.0/. Changes: describe any modifications, if applicable.
+
+## Releases and deployments
+
+Published versions are listed in [GitHub Releases](https://github.com/kaybarax/kevins-mazes/releases). Live site records, with their source commit and URL, are listed in [GitHub Deployments](https://github.com/kaybarax/kevins-mazes/deployments) under `game-hub`, `big-cahuna`, and `maze-chase`.
+
+Use the tracked deployment commands after committing and pushing source changes:
+
+```sh
+npm run deploy --prefix big-cahuna
+npm run deploy --prefix maze-chase
+node scripts/deploy.mjs game-hub
+```
+
+These commands use the existing local `gh` and Wrangler logins, upload to Cloudflare, compare every public asset with the local build, and record success or failure in GitHub. A clean, pushed commit is required. Install the game dependencies first (`npm ci` in each game directory). Direct `wrangler deploy` bypasses this GitHub tracking.
+
+The first release, `v1.0.0`, records the verified game collection at commit `e4f4137`, including the game hub and both games. Its deployment manifest contains the actual Cloudflare version IDs and verification results. The initial deployment records are retrospective records of already-live deployments, not claims that GitHub Actions performed those uploads.
