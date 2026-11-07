@@ -37,7 +37,7 @@ export class Room {
       createdAt: this.createdAt,
     };
   }
-  join(name, credentials = null, now = Date.now()) {
+  join(name, credentials = null, now = Date.now(), startSide = 0) {
     let member =
       credentials &&
       this.members.find(
@@ -55,6 +55,7 @@ export class Room {
       // Bot seats are reclaimed when people join a finished race/lobby.
       this.members = this.members.filter((m) => !m.bot);
       member = {
+        startSide: startSide === 1 ? 1 : 0,
         id: crypto.randomUUID(),
         token: crypto.randomUUID(),
         name:
@@ -112,6 +113,12 @@ export class Room {
       (m) => m.id === id && m.connected && !m.bot,
     );
     if (!member) throw new Error("Join the room before playing.");
+    if (message.type === "entrance") {
+      if (this.match && this.match.status !== "finished")
+        throw new Error("Choose an entrance before the race starts.");
+      member.startSide = message.startSide === 1 ? 1 : 0;
+      return;
+    }
     if (message.type === "start") {
       if (id !== this.hostId)
         throw new Error("Only the room host can start a race.");
@@ -124,6 +131,7 @@ export class Room {
         : 0;
       for (let i = 0; i < bots; i++)
         this.members.push({
+          startSide: (i + 1) % 2,
           id: "bot-" + i,
           name: ["Mango", "Clover", "Scout"][i],
           bot: i === 2 ? "racer" : "collector",
@@ -132,7 +140,7 @@ export class Room {
       this.match = createMatch(
         this.arena,
         this.members.map((m, i) =>
-          createPlayer(this.arena, m.id, m.name, i, m.bot),
+          createPlayer(this.arena, m.id, m.name, i, m.bot, m.startSide),
         ),
       );
       this.startAt = now + 3000;

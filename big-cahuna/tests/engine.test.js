@@ -128,6 +128,7 @@ test("a full four-player bot race terminates with independent collections", () =
       "Bot " + i,
       i,
       i === 3 ? "racer" : "collector",
+      i % 2,
     ),
   );
   const m = createMatch(arena, ps),
@@ -169,4 +170,19 @@ test("fractional controls retain their pace and oversized controls cannot exceed
     for (let i = 0; i < 10; i++) stepMatch(open, match, 0.1);
     assert.ok(Math.abs(p.x - 100 - expected) < 1e-6, `pace ${input}`);
   }
+});
+
+test("progress uses each player’s own starting entrance", async () => {
+  const { exitDistances, progress } = await import("../src/render.js");
+  const distances = exitDistances(arena);
+  for (const side of [0, 1]) {
+    const p = createPlayer(arena, "p", "Player", 0, null, side);
+    assert.equal(progress(arena, distances, p), 0);
+  }
+  const artwork = readFileSync(
+    new URL("../public/arena.svg", import.meta.url),
+    "utf8",
+  );
+  assert.ok(artwork.includes('id="entry-icon-0"'));
+  assert.ok(artwork.includes('id="entry-icon-1"'));
 });

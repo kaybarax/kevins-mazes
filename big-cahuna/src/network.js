@@ -1,7 +1,8 @@
 /** Each browser tab owns a reconnectable seat; only intentions leave the client. */
 export class RoomClient {
-  constructor(code, name, handlers) {
+  constructor(code, name, handlers, startSide = 0) {
     this.code = code;
+    this.startSide = startSide;
     this.name = name;
     this.handlers = handlers;
     this.seq = 0;
@@ -26,6 +27,7 @@ export class RoomClient {
         JSON.stringify({
           type: "join",
           name: this.name,
+          startSide: this.startSide,
           credentials: this.credentials,
         }),
       );

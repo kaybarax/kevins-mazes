@@ -54,6 +54,9 @@ const saved = (() => {
     return {};
   }
 })();
+let startSide = saved.startSide === 1 ? 1 : 0;
+const entranceOptions =
+  '<option value="0">Left entrance</option><option value="1">Right entrance</option>';
 let panMode = false;
 let cameras = {},
   mouseTarget = null;
@@ -93,7 +96,7 @@ function savePrefs(name, bots) {
   try {
     localStorage.setItem(
       "cahuna-preferences",
-      JSON.stringify({ name, bots, sound, pace }),
+      JSON.stringify({ name, bots, sound, pace, startSide }),
     );
   } catch {}
 }
@@ -109,8 +112,16 @@ function showHome() {
   screen = "home";
   match = null;
   keys.clear();
-  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<span class="pill">HAND-DRAWN. READY TO RACE.</span></header><main><section class="hero"><div><div class="eyebrow tag">A little adventure. A big prize.</div><h1>The Big<br><span class="accent">Cahuna</span> Run.</h1><p class="intro">Take the scenic route. Grab the good stuff.<br>Find your way out before the clock does.</p><form class="setup" id="setup"><label>Your explorer name<input id="name" maxlength="20" value="${esc(saved.name || "Explorer")}" autocomplete="nickname" required></label><label>Your competition<select id="bots"><option value="3">3 bots · full arena</option><option value="1">1 bot · head to head</option><option value="0">Solo practice</option></select></label><button class="primary" type="submit">Practice run <span aria-hidden="true">↗</span></button></form><div class="online-setup"><button class="secondary" id="create-room">Create online room ↗</button><form id="join-room"><label>Invite code<input id="room-code" maxlength="8" placeholder="8-letter code" aria-label="Room code" value="${esc(new URLSearchParams(location.search).get("room") || "")}"></label><button class="secondary">Join room</button></form><p>Invite friends. Up to four explorers, with bots filling spare seats.</p></div><p class="status-note">8 minutes. 32 collectibles. Two ways out.<br>Highest score wins—if you make it to a flag in time.</p></div><div class="preview-card"><canvas id="preview" aria-label="Preview of Kevin’s Maze 24 and its collectibles"></canvas><div class="floating-note">Worth the detour.<span>THE BIG CAHUNA · 25 POINTS</span></div><div class="preview-caption"><span class="tag">Arena 24 / Royal blue</span><span>✦ Original maze by Kevin</span></div></div></section><section class="how"><article><span class="step-num">01</span><div><h3>Find your rhythm</h3><p>Hold the left mouse button to steer, or use WASD, arrows, or the touch stick. Right-drag to pan; scroll to zoom.</p></div></article><article><span class="step-num">02</span><div><h3>Make the detour count</h3><p>Collect your own prizes. Watch your rivals and choose when to head for the exit.</p></div></article><article><span class="step-num">03</span><div><h3>Get out. Get the glory.</h3><p>Reach either flag before time runs out. Points decide the winner; time breaks a tie.</p></div></article></section><section class="prize-strip" aria-label="Points guide">${prizes.map(([id, label, points]) => `<div class="prize"><img src="/item-${id}.svg" alt=""><div><strong>${label}</strong><small>${points} points</small></div></div>`).join("")}</section></main><footer><span>A maze worth getting lost in. © Kevin (kaybarax)</span><a href="https://github.com/kaybarax/kevins-mazes">Source & attribution ↗</a></footer></div>`;
+  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<span class="pill">HAND-DRAWN. READY TO RACE.</span></header><main><section class="hero"><div><div class="eyebrow tag">A little adventure. A big prize.</div><h1>The Big<br><span class="accent">Cahuna</span> Run.</h1><p class="intro">Take the scenic route. Grab the good stuff.<br>Find your way out before the clock does.</p><form class="setup" id="setup"><label>Your explorer name<input id="name" maxlength="20" value="${esc(saved.name || "Explorer")}" autocomplete="nickname" required></label><label>Starting entrance<select id="entrance">${entranceOptions}</select></label><label>Your competition<select id="bots"><option value="3">3 bots · full arena</option><option value="1">1 bot · head to head</option><option value="0">Solo practice</option></select></label><button class="primary" type="submit">Practice run <span aria-hidden="true">↗</span></button></form><div class="online-setup"><button class="secondary" id="create-room">Create online room ↗</button><form id="join-room"><label>Invite code<input id="room-code" maxlength="8" placeholder="8-letter code" aria-label="Room code" value="${esc(new URLSearchParams(location.search).get("room") || "")}"></label><button class="secondary">Join room</button></form><p>Invite friends. Up to four explorers, with bots filling spare seats.</p></div><p class="status-note">8 minutes. 32 collectibles. Two ways out.<br>Highest score wins—if you make it to a flag in time.</p></div><div class="preview-card"><canvas id="preview" aria-label="Preview of Kevin’s Maze 24 and its collectibles"></canvas><div class="floating-note">Worth the detour.<span>THE BIG CAHUNA · 25 POINTS</span></div><div class="preview-caption"><span class="tag">Arena 24 / Royal blue</span><span>✦ Original maze by Kevin</span></div></div></section><section class="how"><article><span class="step-num">01</span><div><h3>Find your rhythm</h3><p>Hold the left mouse button to steer, or use WASD, arrows, or the touch stick. Right-drag to pan; scroll to zoom.</p></div></article><article><span class="step-num">02</span><div><h3>Make the detour count</h3><p>Collect your own prizes. Watch your rivals and choose when to head for the exit.</p></div></article><article><span class="step-num">03</span><div><h3>Get out. Get the glory.</h3><p>Reach either flag before time runs out. Points decide the winner; time breaks a tie.</p></div></article></section><section class="prize-strip" aria-label="Points guide">${prizes.map(([id, label, points]) => `<div class="prize"><img src="/item-${id}.svg" alt=""><div><strong>${label}</strong><small>${points} points</small></div></div>`).join("")}</section></main><footer><span>A maze worth getting lost in. © Kevin (kaybarax)</span><a href="https://github.com/kaybarax/kevins-mazes">Source & attribution ↗</a></footer></div>`;
   document.querySelector("#bots").value = saved.bots ?? "3";
+  document.querySelector("#entrance").value = String(startSide);
+  document.querySelector("#entrance").onchange = (e) => {
+    startSide = Number(e.target.value);
+    savePrefs(
+      document.querySelector("#name").value,
+      document.querySelector("#bots").value,
+    );
+  };
   document.querySelector("#setup").onsubmit = (e) => {
     e.preventDefault();
     const name = document.querySelector("#name").value,
@@ -145,21 +156,26 @@ function joinOnline(code) {
   roomUrl.searchParams.set("room", code);
   history.replaceState(null, "", roomUrl);
   savePrefs(name, document.querySelector("#bots").value);
-  online = new RoomClient(code, name, {
-    status(message) {
-      networkStatus = message;
-      if (screen === "lobby") buildLobby();
-      document
-        .querySelector("#connection")
-        ?.replaceChildren(document.createTextNode(message));
-      if (message !== "Connected") {
-        keys.clear();
-        stick = { x: 0, y: 0 };
-      }
+  online = new RoomClient(
+    code,
+    name,
+    {
+      status(message) {
+        networkStatus = message;
+        if (screen === "lobby") buildLobby();
+        document
+          .querySelector("#connection")
+          ?.replaceChildren(document.createTextNode(message));
+        if (message !== "Connected") {
+          keys.clear();
+          stick = { x: 0, y: 0 };
+        }
+      },
+      error: toast,
+      state: receiveRoom,
     },
-    error: toast,
-    state: receiveRoom,
-  });
+    startSide,
+  );
   screen = "lobby";
   buildLobby();
   online.connect();
@@ -168,7 +184,7 @@ function buildLobby() {
   screen = "lobby";
   const members = roomState?.members || [],
     host = roomState?.hostId === myId;
-  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<button class="ghost" id="lobby-leave">Back home</button></header><main class="lobby"><div class="tag">YOUR NEXT EXPEDITION</div><h1>Better with<br><span class="accent">company.</span></h1><p>Invite friends, then race for the best haul. Everyone gets their own prizes.</p><div class="invite"><strong>${esc(online.code)}</strong><button class="secondary" id="copy-invite">Copy invite link</button></div><p id="connection" role="status">${esc(networkStatus)}</p><div class="lobby-members">${members.map((m) => `<div><i class="dot" style="background:${m.bot ? "#b08a39" : "#27614c"}"></i> ${esc(m.name)} ${m.id === myId ? "· you" : ""} ${m.id === roomState.hostId ? "· host" : ""}<small>${m.connected ? (m.bot ? "Bot" : "Ready") : "Reconnecting"}</small></div>`).join("")}</div>${host ? `<label>Fill spare seats<select id="fill-bots"><option value="3">With bots · four racers</option><option value="0">Just us · no bots</option></select></label><button class="primary" id="start-online">Start the expedition ↗</button>` : "<p>Waiting for the host to start…</p>"}<p class="status-note">The clock keeps running while you watch rivals or reconnect.</p></main></div>`;
+  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<button class="ghost" id="lobby-leave">Back home</button></header><main class="lobby"><div class="tag">YOUR NEXT EXPEDITION</div><h1>Better with<br><span class="accent">company.</span></h1><p>Invite friends, then race for the best haul. Everyone gets their own prizes.</p><div class="invite"><strong>${esc(online.code)}</strong><button class="secondary" id="copy-invite">Copy invite link</button></div><p id="connection" role="status">${esc(networkStatus)}</p><div class="lobby-members">${members.map((m) => `<div><i class="dot" style="background:${m.bot ? "#b08a39" : "#27614c"}"></i> ${esc(m.name)} ${m.id === myId ? "· you" : ""} ${m.id === roomState.hostId ? "· host" : ""}<small>${m.startSide === 1 ? "Right" : "Left"} · ${m.connected ? (m.bot ? "Bot" : "Ready") : "Reconnecting"}</small></div>`).join("")}</div><label>Your starting entrance<select id="lobby-entrance">${entranceOptions}</select></label>${host ? `<label>Fill spare seats<select id="fill-bots"><option value="3">With bots · four racers</option><option value="0">Just us · no bots</option></select></label><button class="primary" id="start-online">Start the expedition ↗</button>` : "<p>Waiting for the host to start…</p>"}<p class="status-note">The clock keeps running while you watch rivals or reconnect.</p></main></div>`;
   document.querySelector("#lobby-leave").onclick = showHome;
   document.querySelector("#copy-invite").onclick = async () => {
     const url = new URL(location.href);
@@ -180,6 +196,15 @@ function buildLobby() {
     } catch {
       toast("Share room code " + online.code);
     }
+  };
+  const entrance = document.querySelector("#lobby-entrance");
+  entrance.value = String(
+    members.find((m) => m.id === myId)?.startSide ?? startSide,
+  );
+  entrance.disabled = networkStatus !== "Connected";
+  entrance.onchange = (e) => {
+    startSide = Number(e.target.value);
+    online.send({ type: "entrance", startSide });
   };
   const start = document.querySelector("#start-online");
   if (start)
@@ -252,7 +277,7 @@ function receiveRoom(state, events, id) {
 }
 function startLocal(name, bots) {
   myId = "you";
-  const players = [createPlayer(arena, myId, name, 0)];
+  const players = [createPlayer(arena, myId, name, 0, null, startSide)];
   brains = {};
   for (let i = 0; i < bots; i++) {
     const id = "bot" + i;
@@ -263,6 +288,7 @@ function startLocal(name, bots) {
         ["Mango", "Clover", "Scout"][i],
         i + 1,
         i === 2 ? "racer" : "collector",
+        (startSide + i + 1) % 2,
       ),
     );
     brains[id] = createBot();
