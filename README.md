@@ -2,6 +2,10 @@
 
 A collection of 25 hand-drawn mazes by Kevin, redrawn as clean SVGs and interactive 3D web pages.
 
+## Choose a game
+
+[Kevin’s Mazes — game hub](https://kevins-mazes.the-big-cahuna-run.workers.dev) lets visitors choose a game. Use the **Games** menu inside either game to switch, or click the Kevin’s Mazes brand to return to the hub.
+
 ## Play The Big Cahuna Run
 
 [Open the game](https://the-big-cahuna-run.the-big-cahuna-run.workers.dev) — race through Maze 24, collect prizes, and escape before time runs out. Play solo, against bots, or with up to four players in private invite rooms. Desktop quadrant views and mobile live spectating let you follow your rivals.

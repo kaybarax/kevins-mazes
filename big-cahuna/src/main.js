@@ -72,7 +72,7 @@ function pacedInput(x, y) {
   return { x: (x / length) * pace, y: (y / length) * pace };
 }
 const brand =
-  '<div class="brand"><span class="brand-mark">✳</span><span>KEVIN’S MAZES</span></div>';
+  '<div class="game-brand"><a class="brand" href="https://kevins-mazes.the-big-cahuna-run.workers.dev" aria-label="Kevin’s Mazes — all games"><span class="brand-mark">✳</span><span>KEVIN’S MAZES</span></a><details class="game-switch"><summary>Games ▾</summary><nav aria-label="Choose a game"><a href="https://kevins-mazes.the-big-cahuna-run.workers.dev">All games</a><a href="https://the-big-cahuna-run.the-big-cahuna-run.workers.dev" aria-current="page">The Big Cahuna Run</a><a href="https://kevins-maze-chase.the-big-cahuna-run.workers.dev">Maze Chase</a></nav></details></div>';
 const prizes = [
   ["0", "The Big Cahuna", 25],
   ["8", "Carrot", 10],

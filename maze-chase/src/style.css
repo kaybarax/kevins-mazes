@@ -1172,3 +1172,80 @@ kbd {
     transition: none !important;
   }
 }
+
+/* Shared game navigation stays available on home, lobby and race screens. */
+.game-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.game-brand .brand {
+  color: inherit;
+  text-decoration: none;
+}
+.game-switch {
+  position: relative;
+  font-size: 12px;
+}
+.game-switch summary {
+  cursor: pointer;
+  list-style: none;
+  border: 1px solid #cdd5c4;
+  border-radius: 8px;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+.game-switch summary::-webkit-details-marker {
+  display: none;
+}
+.game-switch nav {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 210px;
+  padding: 6px;
+  background: #fffdf4;
+  border: 1px solid #cdd5c4;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px #183f3626;
+  z-index: 50;
+}
+.game-switch nav a {
+  display: block;
+  padding: 11px;
+  border-radius: 6px;
+  color: #183f36;
+  text-decoration: none;
+}
+.game-switch nav a:hover,
+.game-switch nav a:focus-visible {
+  background: #e7eddf;
+}
+.game-switch nav a[aria-current] {
+  font-weight: 750;
+  background: #edf0e5;
+}
+.game-switch summary:focus-visible {
+  outline: 3px solid #d3934e;
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .game-brand {
+    gap: 7px;
+  }
+  .game-switch {
+    font-size: 10px;
+  }
+  .game-switch summary {
+    padding: 7px;
+  }
+  .game-switch nav {
+    left: 0;
+    right: auto;
+    width: 190px;
+  }
+  .race-header {
+    flex-wrap: wrap;
+  }
+}
