@@ -2,6 +2,8 @@ import {
   createPlayer,
   createMatch,
   setInput,
+  selectNavigator,
+  syncNavigator,
   stepMatch,
   snapshot,
 } from "./engine.js";
@@ -23,6 +25,11 @@ export class Room {
     this.inputAt = new Map();
     this.lastSeq = new Map();
     for (const p of this.match?.players || []) {
+      if (!p.navigators) {
+        p.navigators = createPlayer(arena, p.id, p.name, p.slot).navigators;
+        p.activeNavigator = p.startSide || 0;
+        syncNavigator(p);
+      }
       p.input = { x: 0, y: 0 };
       if (p.bot) this.brains[p.id] = createBot();
     }
@@ -153,7 +160,14 @@ export class Room {
     }
     const p = this.match?.players.find((p) => p.id === id);
     if (!p || this.match.status !== "racing") return;
-    if (message.type === "input") {
+    if (message.type === "navigator") {
+      selectNavigator(p, message.index);
+    } else if (message.type === "input") {
+      if (
+        message.navigator !== undefined &&
+        message.navigator !== p.activeNavigator
+      )
+        return;
       if (
         !Number.isSafeInteger(message.seq) ||
         message.seq < 0 ||

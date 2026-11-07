@@ -48,14 +48,16 @@ export function drawView(
   ctx.translate(tx, ty);
   ctx.scale(scale, scale);
   ctx.drawImage(art.walls, 0, 0);
-  if (trail && player?.trail?.length > 1) {
-    ctx.beginPath();
-    ctx.moveTo(...player.trail[0]);
-    for (const p of player.trail) ctx.lineTo(...p);
-    ctx.strokeStyle = player.color + "60";
-    ctx.lineWidth = 5;
-    ctx.lineCap = "round";
-    ctx.stroke();
+  for (const navigator of player?.navigators || (player ? [player] : [])) {
+    if (trail && navigator.trail?.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(...navigator.trail[0]);
+      for (const p of navigator.trail) ctx.lineTo(...p);
+      ctx.strokeStyle = player.color + "60";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
   }
   arena.items.forEach((item, i) => {
     const taken = player?.collected.includes(item.id);
@@ -109,17 +111,20 @@ export function drawView(
       }
   }
   if (player) {
-    ctx.fillStyle = player.color + "20";
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, 13 + Math.sin(time * 3) * 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = player.color;
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    for (const [i, n] of (player.navigators || [player]).entries()) {
+      const active = i === (player.activeNavigator || 0);
+      ctx.fillStyle = player.color + "20";
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 13 + Math.sin(time * 3) * 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = active ? player.color : "white";
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = active ? "white" : player.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
   }
   for (const p of particles) {
     const age = time - p.at;

@@ -8,6 +8,7 @@ import {
   createMatch,
   stepMatch,
   setInput,
+  selectNavigator,
   ranking,
 } from "./engine.js";
 import { createBot, steerBot } from "./navigation.js";
@@ -55,8 +56,6 @@ const saved = (() => {
   }
 })();
 let startSide = saved.startSide === 1 ? 1 : 0;
-const entranceOptions =
-  '<option value="0">Left entrance</option><option value="1">Right entrance</option>';
 let panMode = false;
 let cameras = {},
   mouseTarget = null;
@@ -112,16 +111,8 @@ function showHome() {
   screen = "home";
   match = null;
   keys.clear();
-  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<span class="pill">HAND-DRAWN. READY TO RACE.</span></header><main><section class="hero"><div><div class="eyebrow tag">A little adventure. A big prize.</div><h1>The Big<br><span class="accent">Cahuna</span> Run.</h1><p class="intro">Take the scenic route. Grab the good stuff.<br>Find your way out before the clock does.</p><form class="setup" id="setup"><label>Your explorer name<input id="name" maxlength="20" value="${esc(saved.name || "Explorer")}" autocomplete="nickname" required></label><label>Starting entrance<select id="entrance">${entranceOptions}</select></label><label>Your competition<select id="bots"><option value="3">3 bots · full arena</option><option value="1">1 bot · head to head</option><option value="0">Solo practice</option></select></label><button class="primary" type="submit">Practice run <span aria-hidden="true">↗</span></button></form><div class="online-setup"><button class="secondary" id="create-room">Create online room ↗</button><form id="join-room"><label>Invite code<input id="room-code" maxlength="8" placeholder="8-letter code" aria-label="Room code" value="${esc(new URLSearchParams(location.search).get("room") || "")}"></label><button class="secondary">Join room</button></form><p>Invite friends. Up to four explorers, with bots filling spare seats.</p></div><p class="status-note">8 minutes. 32 collectibles. Two ways out.<br>Highest score wins—if you make it to a flag in time.</p></div><div class="preview-card"><canvas id="preview" aria-label="Preview of Kevin’s Maze 24 and its collectibles"></canvas><div class="floating-note">Worth the detour.<span>THE BIG CAHUNA · 25 POINTS</span></div><div class="preview-caption"><span class="tag">Arena 24 / Royal blue</span><span>✦ Original maze by Kevin</span></div></div></section><section class="how"><article><span class="step-num">01</span><div><h3>Find your rhythm</h3><p>Hold the left mouse button to steer, or use WASD, arrows, or the touch stick. Right-drag to pan; scroll to zoom.</p></div></article><article><span class="step-num">02</span><div><h3>Make the detour count</h3><p>Collect your own prizes. Watch your rivals and choose when to head for the exit.</p></div></article><article><span class="step-num">03</span><div><h3>Get out. Get the glory.</h3><p>Reach either flag before time runs out. Points decide the winner; time breaks a tie.</p></div></article></section><section class="prize-strip" aria-label="Points guide">${prizes.map(([id, label, points]) => `<div class="prize"><img src="/item-${id}.svg" alt=""><div><strong>${label}</strong><small>${points} points</small></div></div>`).join("")}</section></main><footer><span>A maze worth getting lost in. © Kevin (kaybarax)</span><a href="https://github.com/kaybarax/kevins-mazes">Source & attribution ↗</a></footer></div>`;
+  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<span class="pill">HAND-DRAWN. READY TO RACE.</span></header><main><section class="hero"><div><div class="eyebrow tag">A little adventure. A big prize.</div><h1>The Big<br><span class="accent">Cahuna</span> Run.</h1><p class="intro">Take the scenic route. Grab the good stuff.<br>Find your way out before the clock does.</p><form class="setup" id="setup"><label>Your explorer name<input id="name" maxlength="20" value="${esc(saved.name || "Explorer")}" autocomplete="nickname" required></label><label>Your competition<select id="bots"><option value="3">3 bots · full arena</option><option value="1">1 bot · head to head</option><option value="0">Solo practice</option></select></label><button class="primary" type="submit">Practice run <span aria-hidden="true">↗</span></button></form><div class="online-setup"><button class="secondary" id="create-room">Create online room ↗</button><form id="join-room"><label>Invite code<input id="room-code" maxlength="8" placeholder="8-letter code" aria-label="Room code" value="${esc(new URLSearchParams(location.search).get("room") || "")}"></label><button class="secondary">Join room</button></form><p>Invite friends. Up to four explorers, with bots filling spare seats.</p></div><p class="status-note">8 minutes. 32 collectibles. Two ways out.<br>Highest score wins—if you make it to a flag in time.</p></div><div class="preview-card"><canvas id="preview" aria-label="Preview of Kevin’s Maze 24 and its collectibles"></canvas><div class="floating-note">Worth the detour.<span>THE BIG CAHUNA · 25 POINTS</span></div><div class="preview-caption"><span class="tag">Arena 24 / Royal blue</span><span>✦ Original maze by Kevin</span></div></div></section><section class="how"><article><span class="step-num">01</span><div><h3>Find your rhythm</h3><p>Hold the left mouse button to steer, or use WASD, arrows, or the touch stick. Right-drag to pan; scroll to zoom.</p></div></article><article><span class="step-num">02</span><div><h3>Make the detour count</h3><p>Collect your own prizes. Watch your rivals and choose when to head for the exit.</p></div></article><article><span class="step-num">03</span><div><h3>Get out. Get the glory.</h3><p>Reach either flag before time runs out. Points decide the winner; time breaks a tie.</p></div></article></section><section class="prize-strip" aria-label="Points guide">${prizes.map(([id, label, points]) => `<div class="prize"><img src="/item-${id}.svg" alt=""><div><strong>${label}</strong><small>${points} points</small></div></div>`).join("")}</section></main><footer><span>A maze worth getting lost in. © Kevin (kaybarax)</span><a href="https://github.com/kaybarax/kevins-mazes">Source & attribution ↗</a></footer></div>`;
   document.querySelector("#bots").value = saved.bots ?? "3";
-  document.querySelector("#entrance").value = String(startSide);
-  document.querySelector("#entrance").onchange = (e) => {
-    startSide = Number(e.target.value);
-    savePrefs(
-      document.querySelector("#name").value,
-      document.querySelector("#bots").value,
-    );
-  };
   document.querySelector("#setup").onsubmit = (e) => {
     e.preventDefault();
     const name = document.querySelector("#name").value,
@@ -184,7 +175,7 @@ function buildLobby() {
   screen = "lobby";
   const members = roomState?.members || [],
     host = roomState?.hostId === myId;
-  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<button class="ghost" id="lobby-leave">Back home</button></header><main class="lobby"><div class="tag">YOUR NEXT EXPEDITION</div><h1>Better with<br><span class="accent">company.</span></h1><p>Invite friends, then race for the best haul. Everyone gets their own prizes.</p><div class="invite"><strong>${esc(online.code)}</strong><button class="secondary" id="copy-invite">Copy invite link</button></div><p id="connection" role="status">${esc(networkStatus)}</p><div class="lobby-members">${members.map((m) => `<div><i class="dot" style="background:${m.bot ? "#b08a39" : "#27614c"}"></i> ${esc(m.name)} ${m.id === myId ? "· you" : ""} ${m.id === roomState.hostId ? "· host" : ""}<small>${m.startSide === 1 ? "Right" : "Left"} · ${m.connected ? (m.bot ? "Bot" : "Ready") : "Reconnecting"}</small></div>`).join("")}</div><label>Your starting entrance<select id="lobby-entrance">${entranceOptions}</select></label>${host ? `<label>Fill spare seats<select id="fill-bots"><option value="3">With bots · four racers</option><option value="0">Just us · no bots</option></select></label><button class="primary" id="start-online">Start the expedition ↗</button>` : "<p>Waiting for the host to start…</p>"}<p class="status-note">The clock keeps running while you watch rivals or reconnect.</p></main></div>`;
+  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<button class="ghost" id="lobby-leave">Back home</button></header><main class="lobby"><div class="tag">YOUR NEXT EXPEDITION</div><h1>Better with<br><span class="accent">company.</span></h1><p>Invite friends, then race for the best haul. Everyone gets their own prizes.</p><div class="invite"><strong>${esc(online.code)}</strong><button class="secondary" id="copy-invite">Copy invite link</button></div><p id="connection" role="status">${esc(networkStatus)}</p><div class="lobby-members">${members.map((m) => `<div><i class="dot" style="background:${m.bot ? "#b08a39" : "#27614c"}"></i> ${esc(m.name)} ${m.id === myId ? "· you" : ""} ${m.id === roomState.hostId ? "· host" : ""}<small>${m.connected ? (m.bot ? "Bot" : "Ready") : "Reconnecting"}</small></div>`).join("")}</div>${host ? `<label>Fill spare seats<select id="fill-bots"><option value="3">With bots · four racers</option><option value="0">Just us · no bots</option></select></label><button class="primary" id="start-online">Start the expedition ↗</button>` : "<p>Waiting for the host to start…</p>"}<p class="status-note">The clock keeps running while you watch rivals or reconnect.</p></main></div>`;
   document.querySelector("#lobby-leave").onclick = showHome;
   document.querySelector("#copy-invite").onclick = async () => {
     const url = new URL(location.href);
@@ -196,15 +187,6 @@ function buildLobby() {
     } catch {
       toast("Share room code " + online.code);
     }
-  };
-  const entrance = document.querySelector("#lobby-entrance");
-  entrance.value = String(
-    members.find((m) => m.id === myId)?.startSide ?? startSide,
-  );
-  entrance.disabled = networkStatus !== "Connected";
-  entrance.onchange = (e) => {
-    startSide = Number(e.target.value);
-    online.send({ type: "entrance", startSide });
   };
   const start = document.querySelector("#start-online");
   if (start)
@@ -233,16 +215,17 @@ function receiveRoom(state, events, id) {
   match = state.match;
   for (const p of match.players) {
     p.input = { x: 0, y: 0 };
-    if (!p.trail) {
-      p.trail = fresh
-        ? []
-        : previous?.players.find((old) => old.id === p.id)?.trail || [];
-      const tail = p.trail.at(-1);
-      if (!tail || Math.hypot(p.x - tail[0], p.y - tail[1]) > 3)
-        p.trail.push([p.x, p.y]);
-      if (p.trail.length > 2500) p.trail.shift();
+    const old = fresh ? null : previous?.players.find((old) => old.id === p.id);
+    for (const [i, n] of p.navigators.entries()) {
+      n.trail ||= old?.navigators?.[i]?.trail || [];
+      const tail = n.trail.at(-1);
+      if (!tail || Math.hypot(n.x - tail[0], n.y - tail[1]) > 3)
+        n.trail.push([n.x, n.y]);
+      if (n.trail.length > 2500) n.trail.shift();
     }
+    p.trail = p.navigators[p.activeNavigator].trail;
   }
+  updateNavigatorButtons();
   countdown = state.countdown;
   if (!countdown)
     document.querySelectorAll(".countdown").forEach((el) => el.remove());
@@ -311,7 +294,7 @@ function buildRace() {
   const me = match.players.find((p) => p.id === myId),
     watch = match.players.find((p) => p.id === watchId) || me;
   const quad = layout === "arena" && innerWidth > 700;
-  app.innerHTML = `<div class="play-shell"><header class="racebar"><div class="race-heading">${brand}<div><small>TIME TO ESCAPE</small><span class="timer" id="timer">${fmt(match.duration - match.elapsed)}</span></div></div><div class="race-actions">${online ? `<small id="connection" role="status">${esc(networkStatus)}</small>` : ""}<button class="ghost arena-toggle" id="layout">${quad ? "Focus view" : "Arena view"}</button><label class="pace-control">Speed<select id="pace" aria-label="Movement speed"><option value="0.25">Gentle</option><option value="0.5">Slow</option><option value="0.75">Steady</option><option value="1">Brisk</option><option value="6">Sprint · 6×</option></select></label><button class="ghost" id="sound">Sound ${sound ? "on" : "off"}</button><button class="ghost" id="leave">Leave</button></div></header><main class="race-layout ${quad ? "quadrants" : ""}">${quad ? match.players.map((p) => viewMarkup(p, p.id === watchId)).join("") : viewMarkup(watch, true) + `<aside class="sidebar" aria-label="Competitors">${match.players.map((p) => `<button class="competitor ${p.id === watchId ? "selected" : ""}" data-watch="${p.id}" aria-label="${p.id === myId ? "Return to your race" : "Watch " + esc(p.name)}"><div class="row"><span class="name"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}${p.id === myId ? " · you" : ""}</span><span class="score" data-score="${p.id}">0</span></div><div class="row"><small>${p.bot ? (p.bot === "racer" ? "Cautious racer" : "Collector bot") : p.id === myId ? "You" : "Live rival"}</small><small data-progress="${p.id}">0% to exit</small></div><div class="bar"><i data-bar="${p.id}" style="width:0%"></i></div><canvas data-mini="${p.id}" aria-hidden="true"></canvas></button>`).join("")}</aside>`}</main><div class="race-help"><span><span class="keys"><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></span> Move · Hold left mouse to steer · Right-drag / Shift-drag to pan · Scroll to zoom · <b>Space</b> fit</span><span id="race-hint">Your prizes are yours alone. Watching stops your character, not the clock.</span></div></div>`;
+  app.innerHTML = `<div class="play-shell"><header class="racebar"><div class="race-heading">${brand}<div><small>TIME TO ESCAPE</small><span class="timer" id="timer">${fmt(match.duration - match.elapsed)}</span></div></div><div class="race-actions">${online ? `<small id="connection" role="status">${esc(networkStatus)}</small>` : ""}<button class="ghost arena-toggle" id="layout">${quad ? "Focus view" : "Arena view"}</button><label class="pace-control">Speed<select id="pace" aria-label="Movement speed"><option value="0.25">Gentle</option><option value="0.5">Slow</option><option value="0.75">Steady</option><option value="1">Brisk</option><option value="6">Sprint · 6×</option></select></label><button class="ghost" id="sound">Sound ${sound ? "on" : "off"}</button><button class="ghost" id="leave">Leave</button></div></header><main class="race-layout ${quad ? "quadrants" : ""}">${quad ? match.players.map((p) => viewMarkup(p, p.id === watchId)).join("") : viewMarkup(watch, true) + `<aside class="sidebar" aria-label="Competitors">${match.players.map((p) => `<button class="competitor ${p.id === watchId ? "selected" : ""}" data-watch="${p.id}" aria-label="${p.id === myId ? "Return to your race" : "Watch " + esc(p.name)}"><div class="row"><span class="name"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}${p.id === myId ? " · you" : ""}</span><span class="score" data-score="${p.id}">0</span></div><div class="row"><small>${p.bot ? (p.bot === "racer" ? "Cautious racer" : "Collector bot") : p.id === myId ? "You" : "Live rival"}</small><small data-progress="${p.id}">0% to exit</small></div><div class="bar"><i data-bar="${p.id}" style="width:0%"></i></div><canvas data-mini="${p.id}" aria-hidden="true"></canvas></button>`).join("")}</aside>`}</main><div class="race-help"><span><span class="keys"><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></span> Move · Hold left mouse to steer · Right-drag / Shift-drag to pan · Scroll to zoom · <b>Space</b> fit</span><span id="race-hint">Click either navigator or use the Left / Right navigator buttons to switch.</span></div></div>`;
   document.querySelector("#layout").onclick = () => {
     layout = quad ? "focus" : "arena";
     buildRace();
@@ -374,10 +357,35 @@ function buildRace() {
   for (const canvas of document.querySelectorAll("canvas[data-player]"))
     bindCanvas(canvas);
   for (const s of document.querySelectorAll(".stick")) bindStick(s);
+  document
+    .querySelectorAll("[data-navigator]")
+    .forEach(
+      (b) => (b.onclick = () => activateNavigator(Number(b.dataset.navigator))),
+    );
   updateHud();
 }
+function updateNavigatorButtons() {
+  const me = match?.players.find((p) => p.id === myId);
+  document
+    .querySelectorAll("[data-navigator]")
+    .forEach((b) =>
+      b.setAttribute(
+        "aria-pressed",
+        String(Number(b.dataset.navigator) === me?.activeNavigator),
+      ),
+    );
+}
+function activateNavigator(index) {
+  const me = match.players.find((p) => p.id === myId);
+  if (watchId !== myId || !selectNavigator(me, index)) return;
+  keys.clear();
+  stick = { x: 0, y: 0 };
+  mouseTarget = null;
+  online?.send({ type: "navigator", index });
+  updateNavigatorButtons();
+}
 function viewMarkup(p, active) {
-  return `<section class="view"><div class="view-label"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)} ${p.id === myId ? "· YOU" : p.bot ? "· BOT" : "· LIVE"} <span data-score="${p.id}">${p.score}</span> pts</div><canvas data-player="${p.id}" aria-label="${esc(p.name)}’s live maze" tabindex="0"></canvas><div class="view-tools">${p.id === myId ? `<button class="ghost" data-pan aria-pressed="${panMode}">${panMode ? "Pan mode" : "Play mode"}</button>` : ""}<button class="ghost" data-camera="out" aria-label="Zoom out">−</button><button class="ghost" data-camera="in" aria-label="Zoom in">+</button><button class="ghost" data-camera="fit">Fit</button><button class="ghost" data-camera="locate">Locate</button>${p.id !== myId ? `<button class="ghost" data-watch="${watchId === p.id ? myId : p.id}">${watchId === p.id ? "Return" : "Watch"}</button>` : ""}</div>${active && p.id === myId ? '<div class="stick" aria-label="Touch movement joystick"><i></i></div>' : ""}${active && p.id !== myId ? '<div class="watch-banner">Watching live · Your character is standing still</div>' : ""}${countdown > 0 && active ? '<div class="countdown"><b id="count">3</b><p>Find the prizes. Find your way out.</p></div>' : ""}</section>`;
+  return `<section class="view"><div class="view-label"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)} ${p.id === myId ? "· YOU" : p.bot ? "· BOT" : "· LIVE"} <span data-score="${p.id}">${p.score}</span> pts</div><canvas data-player="${p.id}" aria-label="${esc(p.name)}’s live maze" tabindex="0"></canvas><div class="view-tools">${p.id === myId ? `${p.navigators.map((n, i) => `<button class="ghost" data-navigator="${i}" aria-pressed="${i === p.activeNavigator}">${i === 0 ? "Left" : "Right"} navigator</button>`).join("")}<button class="ghost" data-pan aria-pressed="${panMode}">${panMode ? "Pan mode" : "Play mode"}</button>` : ""}<button class="ghost" data-camera="out" aria-label="Zoom out">−</button><button class="ghost" data-camera="in" aria-label="Zoom in">+</button><button class="ghost" data-camera="fit">Fit</button><button class="ghost" data-camera="locate">Locate</button>${p.id !== myId ? `<button class="ghost" data-watch="${watchId === p.id ? myId : p.id}">${watchId === p.id ? "Return" : "Watch"}</button>` : ""}</div>${active && p.id === myId ? '<div class="stick" aria-label="Touch movement joystick"><i></i></div>' : ""}${active && p.id !== myId ? '<div class="watch-banner">Watching live · Your character is standing still</div>' : ""}${countdown > 0 && active ? '<div class="countdown"><b id="count">3</b><p>Find the prizes. Find your way out.</p></div>' : ""}</section>`;
 }
 function watchPlayer(id) {
   watchId = id;
@@ -417,6 +425,27 @@ function bindCanvas(canvas) {
   canvas.oncontextmenu = (e) => e.preventDefault();
   canvas.onpointerdown = (e) => {
     if (![0, 1, 2].includes(e.button)) return;
+    if (
+      e.button === 0 &&
+      !e.shiftKey &&
+      !panMode &&
+      canvas.dataset.player === myId &&
+      watchId === myId
+    ) {
+      const t = canvas.viewTransform,
+        point = position(e),
+        me = match.players.find((p) => p.id === myId);
+      if (t) {
+        const index = me.navigators.findIndex(
+          (n) =>
+            Math.hypot(
+              n.x * t.scale + t.tx - point.x,
+              n.y * t.scale + t.ty - point.y,
+            ) <= 16,
+        );
+        if (index >= 0) activateNavigator(index);
+      }
+    }
     if (
       e.pointerType !== "touch" &&
       e.button === 0 &&
@@ -709,6 +738,7 @@ function tick(now) {
         online.input(
           watchId === myId ? input.x : 0,
           watchId === myId ? input.y : 0,
+          match.players.find((p) => p.id === myId).activeNavigator,
         );
         sentAt = now;
       }

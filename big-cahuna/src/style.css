@@ -961,3 +961,8 @@ button:disabled {
     content: "Stick or tap to move. Drag to pan. Pinch or +/− to zoom.";
   }
 }
+
+.view-tools [data-navigator][aria-pressed="true"] {
+  background: #167d8d;
+  color: white;
+}

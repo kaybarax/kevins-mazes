@@ -91,8 +91,8 @@ export class RoomClient {
     if (this.ws?.readyState === WebSocket.OPEN)
       this.ws.send(JSON.stringify(message));
   }
-  input(x, y) {
-    this.send({ type: "input", seq: this.seq++, x, y });
+  input(x, y, navigator) {
+    this.send({ type: "input", seq: this.seq++, x, y, navigator });
   }
   leave() {
     this.closed = true;
