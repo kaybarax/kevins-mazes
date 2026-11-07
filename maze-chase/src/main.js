@@ -58,7 +58,7 @@ let selected = prefs.arenaId || "4",
   lastCue = "",
   mouseHeld = false;
 const brand =
-  '<a class="brand" href="/" aria-label="Kevin’s Mazes home"><span>✳</span> KEVIN’S MAZES</a>';
+  '<div class="game-brand"><a class="brand" href="https://kevins-mazes.the-big-cahuna-run.workers.dev" aria-label="Kevin’s Mazes — all games"><span>✳</span> KEVIN’S MAZES</a><details class="game-switch"><summary>Games ▾</summary><nav aria-label="Choose a game"><a href="https://kevins-mazes.the-big-cahuna-run.workers.dev">All games</a><a href="https://the-big-cahuna-run.the-big-cahuna-run.workers.dev">The Big Cahuna Run</a><a href="https://kevins-maze-chase.the-big-cahuna-run.workers.dev" aria-current="page">Maze Chase</a></nav></details></div>';
 const camera = (id) => (cameras[id] ||= { x: 1000, y: 685, zoom: 1 });
 function toast(message) {
   const el = document.querySelector("#toast");
