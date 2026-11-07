@@ -11,6 +11,7 @@ import {
   canStand,
   clearLine,
   SPEED,
+  MAX_PACE,
 } from "../src/engine.js";
 import { findPath, createBot, steerBot } from "../src/navigation.js";
 const arena = decodeArena(
@@ -37,7 +38,7 @@ test("movement cannot tunnel through walls, exceed speed, or leave the arena", (
       y = p.y;
     stepMatch(arena, match, 0.05);
     assert.ok(canStand(arena, p.x, p.y));
-    assert.ok(Math.hypot(p.x - x, p.y - y) <= SPEED * 0.05 + 0.001);
+    assert.ok(Math.hypot(p.x - x, p.y - y) <= SPEED * MAX_PACE * 0.05 + 0.001);
   }
   // A solid one-cell wall must stop even an oversized time step.
   const box = {
@@ -144,12 +145,12 @@ test("a full four-player bot race terminates with independent collections", () =
   }
 });
 
-test("fractional controls retain their pace and oversized controls cannot exceed the slower cap", () => {
+test("fractional controls retain their pace and oversized controls cannot exceed the Sprint cap", () => {
   const open = {
     step: 1,
-    cols: 300,
-    rows: 300,
-    walk: new Uint8Array(90000).fill(1),
+    cols: 600,
+    rows: 600,
+    walk: new Uint8Array(360000).fill(1),
     starts: [[100, 100]],
     items: [],
     exits: [],
@@ -159,7 +160,8 @@ test("fractional controls retain their pace and oversized controls cannot exceed
     [0.5, 30],
     [0.75, 45],
     [1, 60],
-    [20, 60],
+    [6, 360],
+    [20, 360],
   ]) {
     const p = createPlayer(open, "pace", "Pace", 0),
       match = createMatch(open, [p]);

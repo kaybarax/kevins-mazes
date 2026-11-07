@@ -45,7 +45,7 @@ The maze stays fixed while your player moves. Hold the left mouse button and mov
 
 ## Movement and collectibles
 
-The in-race Speed control applies to keyboard, mouse, and touch movement: Gentle (15), Slow (30), Steady (45, default), or Brisk (60 maze units per second). Your selection is saved in this browser. Online movement has the same server-enforced maximum, and bots also use the reduced maximum. Collected icons remain visible in muted grayscale with a checkmark; they still score only once per player.
+The in-race Speed control applies to keyboard, mouse, and touch movement: Gentle (15), Slow (30), Steady (45, default), Brisk (60), or Sprint (360 maze units per second, 6× Brisk). Your selection is saved in this browser. Online movement enforces the Sprint maximum; bots continue at their existing 60-unit pace. Collected icons remain visible in muted grayscale with a checkmark; they still score only once per player.
 
 ## Playing online
 
