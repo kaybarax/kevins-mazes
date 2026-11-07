@@ -1,5 +1,6 @@
 import "./style.css";
 import data from "./arena.json";
+import { zoomCamera, panCamera } from "./camera.js";
 import { RoomClient, createRoom } from "./network.js";
 import {
   decodeArena,
@@ -36,7 +37,6 @@ let art,
   screen = "home",
   myId = "you",
   watchId = "you",
-  overview = false,
   layout = "focus",
   sound = false,
   countdown = 0,
@@ -54,6 +54,15 @@ const saved = (() => {
     return {};
   }
 })();
+let cameras = {},
+  mouseTarget = null;
+function cameraFor(id) {
+  return (cameras[id] ||= { x: 1000, y: 650, zoom: 1 });
+}
+function resetCameras() {
+  cameras = {};
+  mouseTarget = null;
+}
 let pace = [0.25, 0.5, 0.75, 1].includes(saved.pace) ? saved.pace : 0.75;
 function pacedInput(x, y) {
   const length = Math.max(1, Math.hypot(x, y));
@@ -99,7 +108,7 @@ function showHome() {
   screen = "home";
   match = null;
   keys.clear();
-  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<span class="pill">HAND-DRAWN. READY TO RACE.</span></header><main><section class="hero"><div><div class="eyebrow tag">A little adventure. A big prize.</div><h1>The Big<br><span class="accent">Cahuna</span> Run.</h1><p class="intro">Take the scenic route. Grab the good stuff.<br>Find your way out before the clock does.</p><form class="setup" id="setup"><label>Your explorer name<input id="name" maxlength="20" value="${esc(saved.name || "Explorer")}" autocomplete="nickname" required></label><label>Your competition<select id="bots"><option value="3">3 bots · full arena</option><option value="1">1 bot · head to head</option><option value="0">Solo practice</option></select></label><button class="primary" type="submit">Practice run <span aria-hidden="true">↗</span></button></form><div class="online-setup"><button class="secondary" id="create-room">Create online room ↗</button><form id="join-room"><label>Invite code<input id="room-code" maxlength="8" placeholder="8-letter code" aria-label="Room code" value="${esc(new URLSearchParams(location.search).get("room") || "")}"></label><button class="secondary">Join room</button></form><p>Invite friends. Up to four explorers, with bots filling spare seats.</p></div><p class="status-note">8 minutes. 32 collectibles. Two ways out.<br>Highest score wins—if you make it to a flag in time.</p></div><div class="preview-card"><canvas id="preview" aria-label="Preview of Kevin’s Maze 24 and its collectibles"></canvas><div class="floating-note">Worth the detour.<span>THE BIG CAHUNA · 25 POINTS</span></div><div class="preview-caption"><span class="tag">Arena 24 / Royal blue</span><span>✦ Original maze by Kevin</span></div></div></section><section class="how"><article><span class="step-num">01</span><div><h3>Find your rhythm</h3><p>Use WASD, arrow keys, or the touch stick to explore the winding paths.</p></div></article><article><span class="step-num">02</span><div><h3>Make the detour count</h3><p>Collect your own prizes. Watch your rivals and choose when to head for the exit.</p></div></article><article><span class="step-num">03</span><div><h3>Get out. Get the glory.</h3><p>Reach either flag before time runs out. Points decide the winner; time breaks a tie.</p></div></article></section><section class="prize-strip" aria-label="Points guide">${prizes.map(([id, label, points]) => `<div class="prize"><img src="/item-${id}.svg" alt=""><div><strong>${label}</strong><small>${points} points</small></div></div>`).join("")}</section></main><footer><span>A maze worth getting lost in. © Kevin (kaybarax)</span><a href="https://github.com/kaybarax/kevins-mazes">Source & attribution ↗</a></footer></div>`;
+  app.innerHTML = `<div class="shell"><header class="topbar">${brand}<span class="pill">HAND-DRAWN. READY TO RACE.</span></header><main><section class="hero"><div><div class="eyebrow tag">A little adventure. A big prize.</div><h1>The Big<br><span class="accent">Cahuna</span> Run.</h1><p class="intro">Take the scenic route. Grab the good stuff.<br>Find your way out before the clock does.</p><form class="setup" id="setup"><label>Your explorer name<input id="name" maxlength="20" value="${esc(saved.name || "Explorer")}" autocomplete="nickname" required></label><label>Your competition<select id="bots"><option value="3">3 bots · full arena</option><option value="1">1 bot · head to head</option><option value="0">Solo practice</option></select></label><button class="primary" type="submit">Practice run <span aria-hidden="true">↗</span></button></form><div class="online-setup"><button class="secondary" id="create-room">Create online room ↗</button><form id="join-room"><label>Invite code<input id="room-code" maxlength="8" placeholder="8-letter code" aria-label="Room code" value="${esc(new URLSearchParams(location.search).get("room") || "")}"></label><button class="secondary">Join room</button></form><p>Invite friends. Up to four explorers, with bots filling spare seats.</p></div><p class="status-note">8 minutes. 32 collectibles. Two ways out.<br>Highest score wins—if you make it to a flag in time.</p></div><div class="preview-card"><canvas id="preview" aria-label="Preview of Kevin’s Maze 24 and its collectibles"></canvas><div class="floating-note">Worth the detour.<span>THE BIG CAHUNA · 25 POINTS</span></div><div class="preview-caption"><span class="tag">Arena 24 / Royal blue</span><span>✦ Original maze by Kevin</span></div></div></section><section class="how"><article><span class="step-num">01</span><div><h3>Find your rhythm</h3><p>Use WASD, arrow keys, click-to-move, or the touch stick. Drag the maze to pan and scroll to zoom.</p></div></article><article><span class="step-num">02</span><div><h3>Make the detour count</h3><p>Collect your own prizes. Watch your rivals and choose when to head for the exit.</p></div></article><article><span class="step-num">03</span><div><h3>Get out. Get the glory.</h3><p>Reach either flag before time runs out. Points decide the winner; time breaks a tie.</p></div></article></section><section class="prize-strip" aria-label="Points guide">${prizes.map(([id, label, points]) => `<div class="prize"><img src="/item-${id}.svg" alt=""><div><strong>${label}</strong><small>${points} points</small></div></div>`).join("")}</section></main><footer><span>A maze worth getting lost in. © Kevin (kaybarax)</span><a href="https://github.com/kaybarax/kevins-mazes">Source & attribution ↗</a></footer></div>`;
   document.querySelector("#bots").value = saved.bots ?? "3";
   document.querySelector("#setup").onsubmit = (e) => {
     e.preventDefault();
@@ -213,9 +222,9 @@ function receiveRoom(state, events, id) {
     document.querySelectorAll(".countdown").forEach((el) => el.remove());
   if (fresh) {
     document.querySelector(".overlay")?.remove();
+    if (onlineRound !== state.round) resetCameras();
     onlineRound = state.round;
     watchId = myId;
-    overview = false;
     particles = [];
     keys.clear();
     stick = { x: 0, y: 0 };
@@ -257,9 +266,9 @@ function startLocal(name, bots) {
     );
     brains[id] = createBot();
   }
+  resetCameras();
   match = createMatch(arena, players);
   watchId = myId;
-  overview = false;
   layout = "focus";
   particles = [];
   countdown = 3;
@@ -268,13 +277,14 @@ function startLocal(name, bots) {
   buildRace();
 }
 function buildRace() {
+  mouseTarget = null;
   keys.clear();
   stick = { x: 0, y: 0 };
   online?.input(0, 0);
   const me = match.players.find((p) => p.id === myId),
     watch = match.players.find((p) => p.id === watchId) || me;
   const quad = layout === "arena" && innerWidth > 700;
-  app.innerHTML = `<div class="play-shell"><header class="racebar"><div class="race-heading">${brand}<div><small>TIME TO ESCAPE</small><span class="timer" id="timer">${fmt(match.duration - match.elapsed)}</span></div></div><div class="race-actions">${online ? `<small id="connection" role="status">${esc(networkStatus)}</small>` : ""}<button class="ghost arena-toggle" id="layout">${quad ? "Focus view" : "Arena view"}</button><label class="pace-control">Speed<select id="pace" aria-label="Movement speed"><option value="0.25">Gentle</option><option value="0.5">Slow</option><option value="0.75">Steady</option><option value="1">Brisk</option></select></label><button class="ghost" id="sound">Sound ${sound ? "on" : "off"}</button><button class="ghost" id="leave">Leave</button></div></header><main class="race-layout ${quad ? "quadrants" : ""}">${quad ? match.players.map((p) => viewMarkup(p, p.id === watchId)).join("") : viewMarkup(watch, true) + `<aside class="sidebar" aria-label="Competitors">${match.players.map((p) => `<button class="competitor ${p.id === watchId ? "selected" : ""}" data-watch="${p.id}" aria-label="${p.id === myId ? "Return to your race" : "Watch " + esc(p.name)}"><div class="row"><span class="name"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}${p.id === myId ? " · you" : ""}</span><span class="score" data-score="${p.id}">0</span></div><div class="row"><small>${p.bot ? (p.bot === "racer" ? "Cautious racer" : "Collector bot") : p.id === myId ? "You" : "Live rival"}</small><small data-progress="${p.id}">0% to exit</small></div><div class="bar"><i data-bar="${p.id}" style="width:0%"></i></div><canvas data-mini="${p.id}" aria-hidden="true"></canvas></button>`).join("")}</aside>`}</main><div class="race-help"><span><span class="keys"><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></span> Move · Drag toward a direction · <b>Space</b> map</span><span id="race-hint">Your prizes are yours alone. Watching stops your character, not the clock.</span></div></div>`;
+  app.innerHTML = `<div class="play-shell"><header class="racebar"><div class="race-heading">${brand}<div><small>TIME TO ESCAPE</small><span class="timer" id="timer">${fmt(match.duration - match.elapsed)}</span></div></div><div class="race-actions">${online ? `<small id="connection" role="status">${esc(networkStatus)}</small>` : ""}<button class="ghost arena-toggle" id="layout">${quad ? "Focus view" : "Arena view"}</button><label class="pace-control">Speed<select id="pace" aria-label="Movement speed"><option value="0.25">Gentle</option><option value="0.5">Slow</option><option value="0.75">Steady</option><option value="1">Brisk</option></select></label><button class="ghost" id="sound">Sound ${sound ? "on" : "off"}</button><button class="ghost" id="leave">Leave</button></div></header><main class="race-layout ${quad ? "quadrants" : ""}">${quad ? match.players.map((p) => viewMarkup(p, p.id === watchId)).join("") : viewMarkup(watch, true) + `<aside class="sidebar" aria-label="Competitors">${match.players.map((p) => `<button class="competitor ${p.id === watchId ? "selected" : ""}" data-watch="${p.id}" aria-label="${p.id === myId ? "Return to your race" : "Watch " + esc(p.name)}"><div class="row"><span class="name"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}${p.id === myId ? " · you" : ""}</span><span class="score" data-score="${p.id}">0</span></div><div class="row"><small>${p.bot ? (p.bot === "racer" ? "Cautious racer" : "Collector bot") : p.id === myId ? "You" : "Live rival"}</small><small data-progress="${p.id}">0% to exit</small></div><div class="bar"><i data-bar="${p.id}" style="width:0%"></i></div><canvas data-mini="${p.id}" aria-hidden="true"></canvas></button>`).join("")}</aside>`}</main><div class="race-help"><span><span class="keys"><kbd>W A S D</kbd><kbd>↑ ↓ ← →</kbd></span> Move · Click to move · Drag to pan · Scroll to zoom · <b>Space</b> fit</span><span id="race-hint">Your prizes are yours alone. Watching stops your character, not the clock.</span></div></div>`;
   document.querySelector("#layout").onclick = () => {
     layout = quad ? "focus" : "arena";
     buildRace();
@@ -297,11 +307,29 @@ function buildRace() {
   document
     .querySelectorAll("[data-watch]")
     .forEach((el) => (el.onclick = () => watchPlayer(el.dataset.watch)));
-  document.querySelectorAll("[data-map]").forEach(
+  document.querySelectorAll("[data-camera]").forEach(
     (el) =>
       (el.onclick = () => {
-        overview = !overview;
-        el.textContent = overview ? "Follow me" : "Full map";
+        const canvas = el.closest(".view").querySelector("canvas");
+        const id = canvas.dataset.player,
+          camera = cameraFor(id),
+          r = canvas.getBoundingClientRect();
+        if (el.dataset.camera === "fit")
+          Object.assign(camera, { x: 1000, y: 650, zoom: 1 });
+        else if (el.dataset.camera === "locate") {
+          const p = match.players.find((p) => p.id === id);
+          Object.assign(camera, {
+            x: p.x,
+            y: p.y,
+            zoom: Math.max(3, camera.zoom),
+          });
+        } else
+          zoomCamera(
+            camera,
+            el.dataset.camera === "in" ? 1.3 : 1 / 1.3,
+            r.width,
+            r.height,
+          );
       }),
   );
   for (const canvas of document.querySelectorAll("canvas[data-player]"))
@@ -310,7 +338,7 @@ function buildRace() {
   updateHud();
 }
 function viewMarkup(p, active) {
-  return `<section class="view"><div class="view-label"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)} ${p.id === myId ? "· YOU" : p.bot ? "· BOT" : "· LIVE"} <span data-score="${p.id}">${p.score}</span> pts</div><canvas data-player="${p.id}" aria-label="${esc(p.name)}’s live maze" tabindex="0"></canvas><div class="view-tools">${p.id === myId ? `<button class="ghost" data-map>${overview ? "Follow me" : "Full map"}</button>` : `${active ? `<button class="ghost" data-map>${overview ? "Follow" : "Map"}</button>` : ""}<button class="ghost" data-watch="${watchId === p.id ? myId : p.id}">${watchId === p.id ? "Return to play" : "Watch"}</button>`}</div>${active && p.id === myId ? '<div class="stick" aria-label="Touch movement joystick"><i></i></div>' : ""}${active && p.id !== myId ? '<div class="watch-banner">Watching live · Your character is standing still</div>' : ""}${countdown > 0 && active ? '<div class="countdown"><b id="count">3</b><p>Find the prizes. Find your way out.</p></div>' : ""}</section>`;
+  return `<section class="view"><div class="view-label"><i class="dot" style="background:${p.color}"></i> ${esc(p.name)} ${p.id === myId ? "· YOU" : p.bot ? "· BOT" : "· LIVE"} <span data-score="${p.id}">${p.score}</span> pts</div><canvas data-player="${p.id}" aria-label="${esc(p.name)}’s live maze" tabindex="0"></canvas><div class="view-tools"><button class="ghost" data-camera="out" aria-label="Zoom out">−</button><button class="ghost" data-camera="in" aria-label="Zoom in">+</button><button class="ghost" data-camera="fit">Fit</button><button class="ghost" data-camera="locate">Locate</button>${p.id !== myId ? `<button class="ghost" data-watch="${watchId === p.id ? myId : p.id}">${watchId === p.id ? "Return" : "Watch"}</button>` : ""}</div>${active && p.id === myId ? '<div class="stick" aria-label="Touch movement joystick"><i></i></div>' : ""}${active && p.id !== myId ? '<div class="watch-banner">Watching live · Your character is standing still</div>' : ""}${countdown > 0 && active ? '<div class="countdown"><b id="count">3</b><p>Find the prizes. Find your way out.</p></div>' : ""}</section>`;
 }
 function watchPlayer(id) {
   watchId = id;
@@ -323,31 +351,128 @@ function watchPlayer(id) {
   buildRace();
 }
 function bindCanvas(canvas) {
-  let down = false;
-  const update = (e) => {
-    if (canvas.dataset.player !== myId || watchId !== myId) return;
-    const r = canvas.getBoundingClientRect(),
-      t = canvas.viewTransform,
-      p = match.players.find((p) => p.id === myId);
-    if (!t) return;
-    const dx = e.clientX - r.left - (p.x * t.scale + t.tx),
-      dy = e.clientY - r.top - (p.y * t.scale + t.ty),
-      d = Math.hypot(dx, dy);
-    stick = { x: d > 4 ? dx / d : 0, y: d > 4 ? dy / d : 0 };
+  const pointers = new Map();
+  let gesture = null,
+    dragged = false;
+  const camera = cameraFor(canvas.dataset.player);
+  const position = (e) => {
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
+  canvas.style.touchAction = "none";
   canvas.onpointerdown = (e) => {
-    if (e.pointerType === "touch" && innerWidth < 700) return;
-    down = true;
+    if (e.button !== 0 && e.button !== 1) return;
+    mouseTarget = null;
     canvas.setPointerCapture(e.pointerId);
-    update(e);
+    pointers.set(e.pointerId, position(e));
+    dragged = false;
+    gesture = {
+      ...position(e),
+      startX: e.clientX,
+      startY: e.clientY,
+      distance: 0,
+    };
   };
   canvas.onpointermove = (e) => {
-    if (down) update(e);
+    if (!pointers.has(e.pointerId)) return;
+    const old = [...pointers.values()],
+      before =
+        old.length === 2
+          ? Math.hypot(old[0].x - old[1].x, old[0].y - old[1].y)
+          : 0;
+    const prev = pointers.get(e.pointerId),
+      next = position(e);
+    pointers.set(e.pointerId, next);
+    const r = canvas.getBoundingClientRect(),
+      t = canvas.viewTransform;
+    if (pointers.size === 2) {
+      const pair = [...pointers.values()],
+        distance = Math.hypot(pair[0].x - pair[1].x, pair[0].y - pair[1].y);
+      if (before > 0)
+        zoomCamera(
+          camera,
+          distance / before,
+          r.width,
+          r.height,
+          (pair[0].x + pair[1].x) / 2,
+          (pair[0].y + pair[1].y) / 2,
+        );
+      dragged = true;
+    } else if (
+      t &&
+      (dragged ||
+        Math.hypot(e.clientX - gesture.startX, e.clientY - gesture.startY) > 5)
+    ) {
+      dragged = true;
+      panCamera(camera, next.x - prev.x, next.y - prev.y, t.scale);
+    }
   };
-  canvas.onpointerup = canvas.onpointercancel = () => {
-    down = false;
-    stick = { x: 0, y: 0 };
+  canvas.onpointerup = (e) => {
+    if (
+      !dragged &&
+      pointers.size === 1 &&
+      canvas.dataset.player === myId &&
+      watchId === myId &&
+      match.status === "racing"
+    ) {
+      const point = position(e),
+        t = canvas.viewTransform;
+      if (t)
+        mouseTarget = {
+          x: (point.x - t.tx) / t.scale,
+          y: (point.y - t.ty) / t.scale,
+          lastX: null,
+          lastY: null,
+          stuck: 0,
+        };
+    }
+    pointers.delete(e.pointerId);
+    if (pointers.size) dragged = true;
   };
+  canvas.onpointercancel = (e) => {
+    pointers.delete(e.pointerId);
+    dragged = true;
+    mouseTarget = null;
+  };
+  canvas.onwheel = (e) => {
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect(),
+      p = position(e);
+    zoomCamera(
+      camera,
+      Math.exp(-e.deltaY * 0.002),
+      r.width,
+      r.height,
+      p.x,
+      p.y,
+    );
+  };
+}
+function movementInput(x, y, dt) {
+  if (x || y || stick.x || stick.y) {
+    mouseTarget = null;
+    return pacedInput(x || y ? x : stick.x, x || y ? y : stick.y);
+  }
+  if (!mouseTarget || watchId !== myId) return { x: 0, y: 0 };
+  const p = match.players.find((p) => p.id === myId),
+    target = mouseTarget;
+  const dx = target.x - p.x,
+    dy = target.y - p.y,
+    d = Math.hypot(dx, dy);
+  target.stuck =
+    target.lastX !== null &&
+    Math.hypot(p.x - target.lastX, p.y - target.lastY) < 0.01
+      ? target.stuck + dt
+      : 0;
+  target.lastX = p.x;
+  target.lastY = p.y;
+  if (d < 2 || target.stuck > 0.5) {
+    mouseTarget = null;
+    return { x: 0, y: 0 };
+  }
+  const input = pacedInput(dx / d, dy / d),
+    factor = Math.min(1, d / (60 * pace * dt));
+  return { x: input.x * factor, y: input.y * factor };
 }
 function bindStick(el) {
   const knob = el.querySelector("i");
@@ -462,7 +587,7 @@ function results() {
   };
   el.querySelector("#review").onclick = () => {
     el.remove();
-    overview = true;
+    resetCameras();
     buildRace();
     toast("Select a competitor to inspect their route. Leave returns home.");
   };
@@ -488,7 +613,7 @@ function tick(now) {
         const y =
           (keys.has("ArrowDown") || keys.has("s") ? 1 : 0) -
           (keys.has("ArrowUp") || keys.has("w") ? 1 : 0);
-        const input = pacedInput(x || y ? x : stick.x, x || y ? y : stick.y);
+        const input = movementInput(x, y, 0.08);
         online.input(
           watchId === myId ? input.x : 0,
           watchId === myId ? input.y : 0,
@@ -505,7 +630,7 @@ function tick(now) {
           y =
             (keys.has("ArrowDown") || keys.has("s") ? 1 : 0) -
             (keys.has("ArrowUp") || keys.has("w") ? 1 : 0);
-        setInput(me, pacedInput(x || y ? x : stick.x, x || y ? y : stick.y));
+        setInput(me, movementInput(x, y, 0.025));
         for (const p of match.players)
           if (p.bot) steerBot(arena, match, p, brains[p.id], 0.025);
         const events = stepMatch(arena, match, 0.025);
@@ -537,7 +662,7 @@ function tick(now) {
     for (const c of document.querySelectorAll("canvas[data-player]")) {
       const p = match.players.find((p) => p.id === c.dataset.player);
       c.viewTransform = drawView(c, arena, art, p, {
-        overview: (layout === "arena" && innerWidth > 700) || overview,
+        camera: cameraFor(p.id),
         particles: particles.filter((e) => e.playerId === p.id),
         time: now / 1000,
       });
@@ -551,6 +676,7 @@ function tick(now) {
 }
 window.addEventListener("keydown", (e) => {
   if (screen !== "race" || e.target.matches("input,select")) return;
+  if (e.key === "Escape") mouseTarget = null;
   if (
     [
       "ArrowUp",
@@ -567,17 +693,13 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     keys.add(e.key);
     if (e.key === " " && !e.repeat) {
-      overview = !overview;
-      document
-        .querySelectorAll("[data-map]")
-        .forEach(
-          (el) => (el.textContent = overview ? "Follow me" : "Full map"),
-        );
+      Object.assign(cameraFor(watchId), { x: 1000, y: 650, zoom: 1 });
     }
   }
 });
 window.addEventListener("keyup", (e) => keys.delete(e.key));
 window.addEventListener("blur", () => {
+  mouseTarget = null;
   keys.clear();
   stick = { x: 0, y: 0 };
   online?.input(0, 0);
