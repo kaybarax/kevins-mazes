@@ -46,6 +46,14 @@ export function createPlayer(arena, id, name, slot, bot = null, startSide = 0) {
     color: COLORS[slot % 4],
     slot,
     startSide,
+    activeNavigator: startSide,
+    navigators: arena.starts.map(([x, y]) => ({
+      x,
+      y,
+      trail: [[x, y]],
+      distance: 0,
+      lastTrailAt: 0,
+    })),
     bot,
     x,
     y,
@@ -59,6 +67,29 @@ export function createPlayer(arena, id, name, slot, bot = null, startSide = 0) {
     input: { x: 0, y: 0 },
     lastTrailAt: 0,
   };
+}
+export function syncNavigator(p) {
+  if (!p.navigators) return;
+  Object.assign(p.navigators[p.activeNavigator], {
+    x: p.x,
+    y: p.y,
+    trail: p.trail,
+    distance: p.distance,
+    lastTrailAt: p.lastTrailAt,
+  });
+}
+export function selectNavigator(p, index) {
+  if (
+    !Number.isInteger(index) ||
+    !p.navigators?.[index] ||
+    p.finishedAt !== null
+  )
+    return false;
+  syncNavigator(p);
+  p.activeNavigator = p.startSide = index;
+  Object.assign(p, p.navigators[index]);
+  p.input = { x: 0, y: 0 };
+  return true;
 }
 export function createMatch(arena, players, duration = ROUND_SECONDS) {
   return {
@@ -141,6 +172,7 @@ export function stepMatch(arena, match, dt) {
       p.lastTrailAt = match.elapsed;
       if (p.trail.length > 2500) p.trail.splice(0, 1);
     }
+    syncNavigator(p);
   }
   if (
     match.elapsed >= match.duration ||
@@ -171,6 +203,10 @@ export function snapshot(match, includeTrails = false) {
     tick: match.tick,
     players: match.players.map(({ input, lastTrailAt, trail, ...p }) => ({
       ...p,
+      navigators: p.navigators?.map(({ trail, lastTrailAt, ...n }) => ({
+        ...n,
+        ...(includeTrails ? { trail } : {}),
+      })),
       ...(includeTrails ? { trail } : {}),
     })),
   };

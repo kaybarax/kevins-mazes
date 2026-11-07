@@ -7,6 +7,8 @@ import {
   createMatch,
   stepMatch,
   setInput,
+  selectNavigator,
+  snapshot,
   ranking,
   canStand,
   clearLine,
@@ -185,4 +187,30 @@ test("progress uses each player’s own starting entrance", async () => {
   );
   assert.ok(artwork.includes('id="entry-icon-0"'));
   assert.ok(artwork.includes('id="entry-icon-1"'));
+});
+
+test("independent navigators retain positions and trails when switching", () => {
+  const p = createPlayer(arena, "you", "You", 0),
+    match = createMatch(arena, [p]);
+  assert.deepEqual(
+    p.navigators.map((n) => [n.x, n.y]),
+    arena.starts,
+  );
+  setInput(p, { x: 1, y: 0 });
+  stepMatch(arena, match, 0.1);
+  const left = [p.x, p.y];
+  assert.notDeepEqual(left, arena.starts[0]);
+  assert.equal(selectNavigator(p, 1), true);
+  assert.deepEqual([p.x, p.y], arena.starts[1]);
+  setInput(p, { x: -1, y: 0 });
+  stepMatch(arena, match, 0.1);
+  const right = [p.x, p.y];
+  assert.notDeepEqual(right, arena.starts[1]);
+  selectNavigator(p, 0);
+  assert.deepEqual([p.x, p.y], left);
+  selectNavigator(p, 1);
+  assert.deepEqual([p.x, p.y], right);
+  assert.equal(selectNavigator(p, 99), false);
+  assert.equal(snapshot(match).players[0].navigators[0].trail, undefined);
+  assert.ok(snapshot(match, true).players[0].navigators[0].trail);
 });

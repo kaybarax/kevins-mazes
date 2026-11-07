@@ -66,3 +66,5 @@ Cloudflare free-tier usage limits apply. This initial release has private invite
 Deployed from commit `04c79c5` on 7 November 2026 (Europe/Berlin), Cloudflare version `1cd8b854-ff23-4e55-916a-23ee8e9b3e1e`. Ten automated tests and GitHub checks passed. Local browser checks covered two-player joining, synchronized starts, quadrants, spectating, and mobile stick controls at 390 × 844. The production browser recovered an active seat after refresh.
 
 Both public-protocol checks passed against the deployed HTTPS URL: two humans plus two bots, host handover, secret validation, cross-origin rejection, and a complete race plus rematch. In the complete production test, the controlled player finished with 38 points in 25.4 seconds and the server bot with 75 points in 32.7 seconds.
+
+Each player has a navigator at both entrances. Click a navigator or use the Left/Right navigator buttons to switch; each retains its position and trail. Collectibles and score are shared between your navigators. Reaching a flag with either navigator finishes your race. Original location pins remain fixed.

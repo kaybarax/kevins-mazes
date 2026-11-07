@@ -99,3 +99,36 @@ test("each player chooses an entrance before start and keeps it through reconnec
   room.command(left.id, { type: "start", bots: 0 }, 3000);
   assert.equal(room.match.players.find((p) => p.id === right.id).startSide, 0);
 });
+
+test("online navigator switching preserves both positions through reconnect and restart", () => {
+  const { room, host } = setup();
+  room.command(host.id, { type: "start", bots: 0 }, 1000);
+  room.command(host.id, { type: "navigator", index: 1 }, 4000);
+  let p = room.match.players[0];
+  assert.equal(p.activeNavigator, 1);
+  room.command(
+    host.id,
+    { type: "input", seq: 0, x: 1, y: 0, navigator: 0 },
+    4000,
+  );
+  assert.deepEqual(p.input, { x: 0, y: 0 });
+  room.command(
+    host.id,
+    { type: "input", seq: 1, x: -1, y: 0, navigator: 1 },
+    4000,
+  );
+  room.advance(4100);
+  const right = [p.x, p.y];
+  assert.notDeepEqual(right, arena.starts[1]);
+  room.command(host.id, { type: "navigator", index: 0 }, 4100);
+  assert.deepEqual([p.x, p.y], arena.starts[0]);
+  const restored = new Room(
+    arena,
+    "ABCDEFGH",
+    JSON.parse(JSON.stringify(room.save())),
+  );
+  restored.join("Kevin", host, 4200);
+  restored.command(host.id, { type: "navigator", index: 1 }, 4200);
+  p = restored.match.players[0];
+  assert.deepEqual([p.x, p.y], right);
+});
