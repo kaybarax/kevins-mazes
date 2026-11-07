@@ -931,3 +931,33 @@ button:disabled {
     height: calc(100dvh - 205px);
   }
 }
+.view-tools {
+  top: auto;
+  bottom: 12px;
+  display: flex;
+  gap: 4px;
+}
+.view canvas {
+  cursor: grab;
+}
+.view canvas:active {
+  cursor: grabbing;
+}
+.watch-banner {
+  bottom: 60px;
+}
+@media (max-width: 700px) {
+  .view-tools {
+    top: 10px;
+    bottom: auto;
+  }
+  .view-label {
+    top: 50px;
+  }
+  .watch-banner {
+    bottom: 12px;
+  }
+  .race-help > span:first-child::after {
+    content: "Stick or tap to move. Drag to pan. Pinch or +/− to zoom.";
+  }
+}

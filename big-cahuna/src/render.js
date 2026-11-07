@@ -1,3 +1,4 @@
+import { cameraTransform } from "./camera.js";
 import { nodeAt } from "./engine.js";
 export async function loadArt(arena) {
   const load = (src) =>
@@ -18,7 +19,13 @@ export function drawView(
   arena,
   art,
   player,
-  { overview = true, particles = [], trail = true, time = 0 } = {},
+  {
+    overview = true,
+    camera = null,
+    particles = [],
+    trail = true,
+    time = 0,
+  } = {},
 ) {
   const r = canvas.getBoundingClientRect();
   if (!r.width || !r.height) return;
@@ -33,22 +40,11 @@ export function drawView(
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, r.width, r.height);
-  let scale, cx, cy;
-  if (overview) {
-    scale = Math.min(r.width / 1910, r.height / 1240);
-    cx = 1000;
-    cy = 650;
-  } else {
-    scale = Math.max(r.width / 750, r.height / 530);
-    cx = player?.x ?? 1000;
-    cy = player?.y ?? 650;
-    const hw = r.width / scale / 2,
-      hh = r.height / scale / 2;
-    cx = Math.max(100 + hw, Math.min(1880 - hw, cx));
-    cy = Math.max(65 + hh, Math.min(1250 - hh, cy));
-  }
-  const tx = r.width / 2 - cx * scale,
-    ty = r.height / 2 - cy * scale;
+  const { scale, tx, ty } = cameraTransform(
+    camera || { x: 1000, y: 650, zoom: 1 },
+    r.width,
+    r.height,
+  );
   ctx.translate(tx, ty);
   ctx.scale(scale, scale);
   ctx.drawImage(art.walls, 0, 0);
