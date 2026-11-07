@@ -418,6 +418,11 @@ function bindCanvas(canvas) {
   };
   canvas.onpointermove = (e) => {
     if (steering === e.pointerId) {
+      if (!(e.buttons & 1)) {
+        steering = null;
+        mouseTarget = null;
+        return;
+      }
       steer(e);
       return;
     }
