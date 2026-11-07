@@ -67,7 +67,8 @@ print('Collectible components:',[(x['kind'],x['component']) for x in items])
 print('Exit components:',[int(components.flat[nearest(e['x'],e['y'])]) for e in exits])
 data={'version':1,'doors':doors,'sourceSha256':hashlib.sha256(source.read_bytes()).hexdigest(),'width':2000,'height':1440,'step':step,'cols':grid.shape[1],'rows':grid.shape[0],'walkable':base64.b64encode(np.packbits(grid.flatten(),bitorder='little').tobytes()).decode(),'bounds':bounds,'starts':[position(i) for i in starts],'exits':exits,'items':items}
 (ROOT/'src/arena.json').write_text(json.dumps(data,separators=(',',':'))+'\n')
-(ROOT/'public/arena.svg').write_text(wallsvg)
+pins=''.join(ET.tostring(g,encoding='unicode') for g in tree.findall('s:g',ns) if g.attrib.get('id','').startswith('entry-icon-'))
+(ROOT/'public/arena.svg').write_text(wallsvg.replace('</svg>',pins+'</svg>'))
 # Each collectible remains a vector asset with its existing artwork.
 for item,g in zip(items,collect):
  x,y=item['x'],item['y'];size=190 if item['kind']=='The Big Cahuna' else 110

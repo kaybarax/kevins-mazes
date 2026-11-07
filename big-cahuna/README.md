@@ -39,6 +39,10 @@ Online integration check (with the local server running): `node scripts/check-on
 
 Deploy with `npm run deploy` after `npx wrangler login`. The Worker serves the built assets and SQLite-backed Durable Object rooms together. Rooms expire after 24 hours; invite codes are not accounts. Reconnect seats are stored per browser tab.
 
+## Starting entrances
+
+Choose Left or Right on the home screen for practice or when joining online. Each online player can change their own entrance in the lobby before the host starts. The choice is locked during a race and retained for reconnects and rematches. Bots use both entrances. Both original blue location pins remain fixed in the maze artwork throughout play.
+
 ## Camera and navigation
 
 The maze stays fixed while your player moves. Hold the left mouse button and move the pointer to steer; release to stop. Right-drag, middle-drag, or Shift + left-drag pans without steering. The Play mode / Pan mode button lets a single-button mouse switch between steering and left-drag panning. Touch keeps tap-to-move, drag-to-pan, and the movement stick. Scroll, pinch, or use +/− to zoom. **Fit** (Space) shows the whole maze. **Locate** manually centers and zooms on the displayed racer without enabling camera tracking. Escape cancels click-to-move. Each racer’s view keeps its own camera position.

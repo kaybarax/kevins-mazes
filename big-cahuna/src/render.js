@@ -162,7 +162,7 @@ export function exitDistances(arena) {
   }
   return d;
 }
-export function progress(arena, distances, p, startSide = 0) {
+export function progress(arena, distances, p, startSide = p.startSide ?? 0) {
   if (p.finishedAt !== null) return 100;
   const start = distances[nodeAt(arena, ...arena.starts[startSide])],
     now = distances[nodeAt(arena, p.x, p.y)];

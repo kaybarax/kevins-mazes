@@ -136,6 +136,7 @@ export class CahunaRoom extends DurableObject {
           message.name,
           message.credentials,
           now,
+          message.startSide,
         );
         id = credentials.id;
         for (const other of this.ctx.getWebSockets())
@@ -164,8 +165,8 @@ export class CahunaRoom extends DurableObject {
           return;
         }
         this.room.command(id, message, now);
-        if (message.type === "start") {
-          this.startTick();
+        if (message.type === "start" || message.type === "entrance") {
+          if (message.type === "start") this.startTick();
           this.broadcast({
             type: "room",
             state: this.room.publicState(now, true),

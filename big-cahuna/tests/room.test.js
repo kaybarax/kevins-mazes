@@ -73,3 +73,29 @@ test("deadline survives restart and all disconnected players; rematch resets sta
   assert.equal(restored.match.elapsed, 0);
   assert.equal(restored.match.players[0].score, 0);
 });
+
+test("each player chooses an entrance before start and keeps it through reconnect and rematch", () => {
+  const room = new Room(arena, "ABCDEFGH");
+  const left = room.join("Left", null, 1000, 0),
+    right = room.join("Right", null, 1000, 1);
+  room.command(left.id, { type: "start", bots: 2 }, 1000);
+  for (const [id, side] of [
+    [left.id, 0],
+    [right.id, 1],
+  ]) {
+    const p = room.match.players.find((p) => p.id === id);
+    assert.equal(p.startSide, side);
+    assert.deepEqual([p.x, p.y], arena.starts[side]);
+  }
+  assert.throws(
+    () => room.command(right.id, { type: "entrance", startSide: 0 }),
+    /before/,
+  );
+  room.disconnect(right.id);
+  room.join("Right", right, 2000, 0);
+  assert.equal(room.match.players.find((p) => p.id === right.id).startSide, 1);
+  room.match.status = "finished";
+  room.command(right.id, { type: "entrance", startSide: 0 });
+  room.command(left.id, { type: "start", bots: 0 }, 3000);
+  assert.equal(room.match.players.find((p) => p.id === right.id).startSide, 0);
+});

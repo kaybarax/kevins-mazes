@@ -38,12 +38,14 @@ export function clearLine(arena, x, y, tx, ty) {
   return true;
 }
 export function createPlayer(arena, id, name, slot, bot = null, startSide = 0) {
+  startSide = startSide === 1 ? 1 : 0;
   const [x, y] = arena.starts[startSide];
   return {
     id,
     name: String(name).trim().slice(0, 20) || "Explorer",
     color: COLORS[slot % 4],
     slot,
+    startSide,
     bot,
     x,
     y,
