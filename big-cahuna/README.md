@@ -41,7 +41,7 @@ Deploy with `npm run deploy` after `npx wrangler login`. The Worker serves the b
 
 ## Camera and navigation
 
-The maze stays fixed while your player moves. Click/tap to move toward a point (walls still block movement), or use arrows/WASD/the touch stick. Drag to pan; scroll, pinch, or use +/− to zoom. **Fit** (Space) shows the whole maze. **Locate** manually centers and zooms on the displayed racer without enabling camera tracking. Escape cancels click-to-move. Each racer’s view keeps its own camera position.
+The maze stays fixed while your player moves. Hold the left mouse button and move the pointer to steer; release to stop. Right-drag, middle-drag, or Shift + left-drag pans without steering. The Play mode / Pan mode button lets a single-button mouse switch between steering and left-drag panning. Touch keeps tap-to-move, drag-to-pan, and the movement stick. Scroll, pinch, or use +/− to zoom. **Fit** (Space) shows the whole maze. **Locate** manually centers and zooms on the displayed racer without enabling camera tracking. Escape cancels click-to-move. Each racer’s view keeps its own camera position.
 
 ## Movement and collectibles
 
