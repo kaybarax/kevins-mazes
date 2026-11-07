@@ -1,5 +1,6 @@
 /** Shared deterministic rules. Online rooms run these on the server. */
 export const SPEED = 60;
+export const MAX_PACE = 6;
 export const ROUND_SECONDS = 480;
 export const COLORS = ["#167d8d", "#e17b42", "#8a67c7", "#c49d24"];
 export function decodeArena(data) {
@@ -71,7 +72,7 @@ export function setInput(player, input) {
   const x = Number(input?.x),
     y = Number(input?.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-  const length = Math.max(1, Math.hypot(x, y));
+  const length = Math.max(1, Math.hypot(x, y) / MAX_PACE);
   player.input = { x: x / length, y: y / length };
 }
 export function movePlayer(arena, player, dx, dy) {
