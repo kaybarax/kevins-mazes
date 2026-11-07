@@ -8,6 +8,12 @@ A collection of 25 hand-drawn mazes by Kevin, redrawn as clean SVGs and interact
 
 Source, development commands, and game rules are in [big-cahuna/README.md](big-cahuna/README.md).
 
+## Play Maze Chase
+
+[Open Maze Chase](https://kevins-maze-chase.the-big-cahuna-run.workers.dev) — one hunter, three runners, five original maze arenas. Collect two keys and escape, or hunt the runners using footprints and reveal pulses. Play with bots or friends in invite rooms, rotate roles over four rounds, and vote for the next arena.
+
+Rules, controls, and development commands are in [maze-chase/README.md](maze-chase/README.md).
+
 ## Files
 
 - **cleaned mazes/** — scalable SVG versions for viewing and printing.
