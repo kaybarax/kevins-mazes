@@ -55,6 +55,7 @@ let selected = prefs.arenaId || "4",
   connection = "Offline practice",
   stateKey = "",
   lastEvent = "",
+  lastCue = "",
   mouseHeld = false;
 const brand =
   '<a class="brand" href="/" aria-label="Kevin’s Mazes home"><span>✳</span> KEVIN’S MAZES</a>';
@@ -316,22 +317,26 @@ function updateHud() {
   document.querySelector("#timer").textContent =
     `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`;
   document.querySelector("#status").textContent =
-    me.state === "active"
-      ? me.role === "runner"
-        ? `${Math.min(2, me.keys.length)} / 2 keys`
-        : game.elapsed < 7
-          ? "Runners have a head start."
-          : "The hunt is on."
-      : me.state === "escaped"
-        ? "You escaped!"
-        : me.state === "caught"
-          ? "Caught this round."
-          : "Time’s up.";
+    game.status === "finished"
+      ? "Round complete."
+      : me.state === "active"
+        ? me.role === "runner"
+          ? `${Math.min(2, me.keys.length)} / 2 keys`
+          : game.elapsed < 7
+            ? "Runners have a head start."
+            : "The hunt is on."
+        : me.state === "escaped"
+          ? "You escaped!"
+          : me.state === "caught"
+            ? "Caught this round."
+            : "Time’s up.";
   for (const p of game.players) {
     document.querySelector(`[data-player-status="${p.id}"]`).textContent =
       p.state === "active"
         ? p.role === "hunter"
-          ? "Hunting"
+          ? game.status === "finished"
+            ? "Round complete"
+            : "Hunting"
           : `${p.keys.length} keys · ${p.visible ? "in sight" : "out of sight"}`
         : p.state;
     document.querySelector(`[data-progress="${p.id}"]`).style.width =
@@ -367,6 +372,16 @@ function updateHud() {
   )
     results();
   else if (game.status === "playing") overlay.innerHTML = "";
+  const cue = game.round + ":" + game.lastEcho;
+  if (
+    me.role === "hunter" &&
+    game.status === "playing" &&
+    game.echoes?.length &&
+    cue !== lastCue
+  ) {
+    lastCue = cue;
+    tone(300);
+  }
   const event = game.events?.at(-1);
   if (event) {
     const signature = game.elapsed + event.type + event.id;
